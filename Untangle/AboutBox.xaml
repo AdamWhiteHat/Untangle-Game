@@ -1,0 +1,88 @@
+﻿<!--
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * 
+ * Project:	Untangle
+ * 
+ * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
+-->
+
+<Window x:Class="Untangle.AboutBox"
+        x:Name="Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:v="clr-namespace:Untangle"
+        Title="{lex:Loc}"
+        Height="330"
+        Width="440"
+        WindowStyle="SingleBorderWindow"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Icon="Resources\Untangle.ico"
+        lex:ResxLocalizationProvider.DefaultAssembly="Untangle"
+        lex:ResxLocalizationProvider.DefaultDictionary="Resources.AboutBox">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="tb_Title"
+                   Grid.Row="0"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Text="{lex:Loc}" />
+        <StackPanel Grid.Row="1"
+                    Margin="5,0,0,0"
+                    Orientation="Horizontal">
+            <TextBlock x:Name="tb_VersionCaption"
+                       FontStyle="Italic"
+                       Text="{lex:Loc}" />
+            <TextBlock x:Name="tb_Version"
+                       Margin="5,0,0,0"
+                       FontStyle="Italic"
+                       Text="{x:Static v:Constants.Version}" />
+        </StackPanel>
+        <TextBlock x:Name="tb_Author"
+                   Grid.Row="2"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   v:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_Author_Text}" />
+        <TextBlock x:Name="tb_Translator"
+                   Grid.Row="3"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   v:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_Translator_Text}" />
+        <TextBlock x:Name="tb_License"
+                   Grid.Row="4"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   v:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_License_Text}" />
+        <TextBlock x:Name="tb_SourceCode"
+                   Grid.Row="5"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   v:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_SourceCode_Text}" />
+        <TextBlock x:Name="tb_3rdPartyLicenses"
+                   Grid.Row="6"
+                   Margin="0,10,0,0"
+                   TextWrapping="Wrap"
+                   v:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_3rdPartyLicenses_Text}" />
+        <Button x:Name="btn_Close"
+                Grid.Row="8"
+                Width="75"
+                Height="23"
+                HorizontalAlignment="Right"
+                Content="{lex:Loc}"
+                Click="btn_Close_Click" />
+    </Grid>
+</Window>

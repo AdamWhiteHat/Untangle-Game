@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net5.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<StartupObject>Untangle.App</StartupObject>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Title>Untangle</Title>
+		<AssemblyTitle>Untangle</AssemblyTitle>
+		<Description>Untangle the web by removing all intersections between line segments</Description>
+		<Product>Untangle</Product>
+		<Authors>Aleksandar Dalemski and Adam White</Authors>
+		<Copyright>Created by Aleksandar Dalemski</Copyright>
+
+		<Version>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</Version>
+		<AssemblyVersion>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</AssemblyVersion>
+		<FileVersion>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</FileVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Resources\Untangle.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="WPFLocalizeExtension" Version="3.9.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Untangle.ico" />
+	</ItemGroup>
+
+</Project>
