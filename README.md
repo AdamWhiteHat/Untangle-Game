@@ -5,6 +5,9 @@ Untangle is a simple and straightforward puzzle game in which the player must un
 
 Drag vertices around the game field with the left mouse button to prevent intersections between line segments.
 
+![Untangle Screenshot](https://github.com/AdamWhiteHat/Untangle-Game/blob/master/Screenshot.jpg "Untangle Screenshot")
+
+
 In later levels, it is useful to press and hold the left mouse button over a vertex in order to highlight all vertices connected to it with line segments.
 
 Levels are randomly generated and potentially unlimited in number, although sooner or later the game field will become too tight or the game performance will deteriorate.
