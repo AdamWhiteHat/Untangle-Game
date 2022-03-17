@@ -101,30 +101,6 @@ namespace Untangle.ViewModels
 		}
 		private Dictionary<LineSegment, HashSet<LineSegment>> _intersections;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		public Graph(IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
 			: this(GenerateNewUID(), vertices, lineSegments)
 		{
@@ -148,12 +124,6 @@ namespace Untangle.ViewModels
 
 			CalculateAllIntersections();
 		}
-
-
-
-
-
-
 
 
 
@@ -215,25 +185,6 @@ namespace Untangle.ViewModels
 		{
 			return System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -401,7 +352,7 @@ namespace Untangle.ViewModels
 					{
 						continue;
 					}
-					
+
 					if (CalculationHelper.CheckLinesIntersect(lineSegment, otherSegment))
 					{
 						if (!intersectingSegments.Contains(otherSegment))

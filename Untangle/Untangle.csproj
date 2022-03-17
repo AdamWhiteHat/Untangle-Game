@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net5.0-windows</TargetFramework>
 		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
 		<StartupObject>Untangle.App</StartupObject>
 	</PropertyGroup>
 
@@ -21,15 +22,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Untangle.ico" />
-	</ItemGroup>
-
-	<ItemGroup>
+		<PackageReference Include="AutomaticGraphLayout" Version="1.1.12" />
+		<PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
 		<PackageReference Include="WPFLocalizeExtension" Version="3.9.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Resource Include="Resources\Untangle.ico" />
+		<None Remove="Resources\Untangle.ico" />
+		<Resource Include="Resources\Untangle.ico" />
 	</ItemGroup>
 
 </Project>

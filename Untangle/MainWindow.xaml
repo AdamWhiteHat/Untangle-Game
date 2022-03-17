@@ -153,7 +153,8 @@
 				<Separator />
 				<MenuItem x:Name="mi_DebugView"
                           Header="Debug View"
-                          Click="mi_DebugView_Click"/>				
+                          Click="mi_DebugView_Click"/>
+				<MenuItem x:Name="mi_AutoSolve" Header="Attempt Auto-Solve" Click="mi_AutoSolve_Click" />
 			</MenuItem>
 			<MenuItem x:Name="mi_Settings"
                       Header="{lex:Loc}">

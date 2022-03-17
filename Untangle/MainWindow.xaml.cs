@@ -576,5 +576,10 @@ namespace Untangle
 			textBoxDebugInfo.SetCurrentValue(TextBox.TextProperty, output.ToString());
 			//textBoxDebugInfo.InvalidateVisual();
 		}
+
+		private void mi_AutoSolve_Click(object sender, RoutedEventArgs e)
+		{
+			_viewModel.AutoSolve();
+		}
 	}
 }

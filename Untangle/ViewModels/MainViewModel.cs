@@ -160,6 +160,10 @@ namespace Untangle.ViewModels
 			double maxY = Game.Level.GameGraph.Vertices.Max(v => v.Position.Y);
 			return new Size(maxX, maxY);
 		}
+		public void AutoSolve()
+		{
+			AutoSolver.Solve(Game.Level.GameGraph, _gameBoardSize);
+		}
 
 		#region New/Load/Save/Edit
 
