@@ -5,7 +5,12 @@
  * 
  * Project:	Untangle
  * 
- * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
+ * Original Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
+ * 
+ * Project forked and heavily modified by Adam White
+ * https://github.com/AdamWhiteHat/Untangle-Game
+ * 
+ *   
  */
 
 using System;
@@ -59,10 +64,59 @@ namespace Untangle
 			ic_GameField.SizeChanged += Ic_GameField_SizeChanged;
 		}
 
+		private void SetTitle(string title)
+		{
+			string newTitle = $"Untangled - {title}";
+			this.Title = newTitle;
+			labelTitle.Content = newTitle;
+		}
+
 		private void Ic_GameField_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			_viewModel.SetBoardSize(ic_GameField.RenderSize);
 		}
+
+		#region Minimize/Maximize/Close
+
+		private void btnMinimizeWindow_Click(object sender, RoutedEventArgs e)
+		{
+			this.WindowState = WindowState.Minimized;
+		}
+
+		private void btnMaximizeWindow_Click(object sender, RoutedEventArgs e)
+		{
+			if (this.WindowState == WindowState.Maximized)
+			{
+				this.WindowState = WindowState.Normal;
+				this.ResizeMode = ResizeMode.CanResizeWithGrip;
+				btnMaximizeWindow.Content = "1";
+			}
+			else if (this.WindowState == WindowState.Normal)
+			{
+				this.ResizeMode = ResizeMode.NoResize;
+				this.WindowState = WindowState.Maximized;
+				btnMaximizeWindow.Content = "2";
+			}
+		}
+
+		private void btnCloseWindow_Click(object sender, RoutedEventArgs e)
+		{
+			ApplicationCommands.Close.Execute(null, null);
+		}
+
+		private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ButtonState == MouseButtonState.Pressed)
+			{
+				if (this.WindowState == WindowState.Maximized)
+				{
+					btnMaximizeWindow_Click(null, null);
+				}
+				this.DragMove();
+			}
+		}
+
+		#endregion
 
 		#region Menu Click Commands: New/Load/Save/About/Exit
 
@@ -255,6 +309,59 @@ namespace Untangle
 
 		#endregion
 
+		#region Misc Input Events
+
+		/// <summary>
+		/// Handles zooming of the game field.
+		/// </summary>
+		private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+		{
+			if (Keyboard.Modifiers == ModifierKeys.Control)
+			{
+				decimal value = e.Delta / 120;
+				decimal scaledValue = Math.Abs(value * 0.05m);
+				int sign = Math.Sign(value);
+				if (sign == -1)
+				{
+					_viewModel.ScaleZoom -= scaledValue;
+				}
+				else if (sign == 1)
+				{
+					_viewModel.ScaleZoom += scaledValue;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Handles opacity adjustment keys.
+		/// </summary>
+		/// <param name="sender">The source of the event.</param>
+		/// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
+		private void Window_KeyUp(object sender, KeyEventArgs e)
+		{
+			if (mi_Transparent.IsChecked)
+			{
+				if (e.Key == Key.Add)
+				{
+					this.Opacity += 0.05;
+				}
+				else if (e.Key == Key.Subtract)
+				{
+					this.Opacity -= 0.05;
+				}
+			}
+
+			if (Keyboard.Modifiers == ModifierKeys.Alt)
+			{
+				if (e.SystemKey == Key.Enter)
+				{
+					_viewModel.Game.Level.ShrinkLongestEdge();
+				}
+			}
+		}
+
+		#endregion
+
 		#region Undo/Redo
 
 		/// <summary>
@@ -387,6 +494,44 @@ namespace Untangle
 
 		}
 
+		#region Color Vertices
+
+		private void ColorGraph_Click(object sender, RoutedEventArgs e)
+		{
+			int chromaticNumber = GameLevel.ColorGraph(_viewModel.Game.Level.GameGraph.Vertices);
+			MessageBox.Show($"The graph's chromatic number is: {chromaticNumber}", "Chromatic Number", MessageBoxButton.OK);
+		}
+
+		private void mi_ColorByStartPositions_Click(object sender, RoutedEventArgs e)
+		{
+			_viewModel.Game.Level.MarkVerticesInStartPosition();
+		}
+
+		#endregion
+
+		#region Moving Vertices
+
+		private void mi_AutoSolve_Click(object sender, RoutedEventArgs e)
+		{
+			_viewModel.AutoSolve();
+		}
+
+		private void mi_AttemptMoveVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
+		{
+			_viewModel.Game.Level.AttemptSendVerticesToStartPositionWithoutCrossings();
+		}
+
+		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
+		{
+			_viewModel.Game.Level.Edit_RandomizeVertices(ic_GameField.RenderSize);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Settings Menu Commands
+
 		/// <summary>
 		/// Toggles window transparency.
 		/// </summary>
@@ -402,138 +547,25 @@ namespace Untangle
 			}
 		}
 
-		#endregion
-
-		#region Misc Input Events
-
-		/// <summary>
-		/// Handles zooming of the game field.
-		/// </summary>
-		private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+		private void mi_ShowGridLines_Click(object sender, RoutedEventArgs e)
 		{
-			if (Keyboard.Modifiers == ModifierKeys.Control)
+			if (mi_ShowGridLines.IsChecked)
 			{
-				decimal value = e.Delta / 120;
-				decimal scaledValue = Math.Abs(value * 0.05m);
-				int sign = Math.Sign(value);
-				if (sign == -1)
-				{
-					_viewModel.ScaleZoom -= scaledValue;
-				}
-				else if (sign == 1)
-				{
-					_viewModel.ScaleZoom += scaledValue;
-				}
+
+				gameboardGrid.Background = TryFindResource("SquareLattice") as Brush;
+			}
+			else
+			{
+				gameboardGrid.Background = Brushes.Transparent;
 			}
 		}
 
-		/// <summary>
-		/// Handles opacity adjustment keys.
-		/// </summary>
-		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">The <see cref="KeyEventArgs"/> instance containing the event data.</param>
-		private void Window_KeyUp(object sender, KeyEventArgs e)
-		{
-			if (mi_Transparent.IsChecked)
-			{
-				if (e.Key == Key.Add)
-				{
-					this.Opacity += 0.05;
-				}
-				else if (e.Key == Key.Subtract)
-				{
-					this.Opacity -= 0.05;
-				}
-			}
+		#region Debug View
 
-			if (Keyboard.Modifiers == ModifierKeys.Alt)
-			{
-				if (e.SystemKey == Key.Enter)
-				{
-					_viewModel.Game.Level.ShrinkLongestEdge();
-				}
-			}
-		}
-
-		#endregion
-
-		#region Minimize/Maximize/Close
-
-		private void btnMinimizeWindow_Click(object sender, RoutedEventArgs e)
-		{
-			this.WindowState = WindowState.Minimized;
-		}
-
-		private void btnMaximizeWindow_Click(object sender, RoutedEventArgs e)
-		{
-			if (this.WindowState == WindowState.Maximized)
-			{
-				this.WindowState = WindowState.Normal;
-				this.ResizeMode = ResizeMode.CanResizeWithGrip;
-				btnMaximizeWindow.Content = "1";
-			}
-			else if (this.WindowState == WindowState.Normal)
-			{
-				this.ResizeMode = ResizeMode.NoResize;
-				this.WindowState = WindowState.Maximized;
-				btnMaximizeWindow.Content = "2";
-			}
-		}
-
-		private void btnCloseWindow_Click(object sender, RoutedEventArgs e)
-		{
-			ApplicationCommands.Close.Execute(null, null);
-		}
-
-		private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-		{
-			if (e.ButtonState == MouseButtonState.Pressed)
-			{
-				if (this.WindowState == WindowState.Maximized)
-				{
-					btnMaximizeWindow_Click(null, null);
-				}
-				this.DragMove();
-			}
-		}
-
-		#endregion
-
-		private void SetTitle(string title)
-		{
-			string newTitle = $"Untangled - {title}";
-			this.Title = newTitle;
-			labelTitle.Content = newTitle;
-		}
-
-		private void ColorGraph_Click(object sender, RoutedEventArgs e)
-		{
-			int chromaticNumber = GameLevel.ColorGraph(_viewModel.Game.Level.GameGraph.Vertices);
-			MessageBox.Show($"The graph's chromatic number is: {chromaticNumber}", "Chromatic Number", MessageBoxButton.OK);
-		}
-
-		private void mi_ColorByStartPositions_Click(object sender, RoutedEventArgs e)
-		{
-			_viewModel.Game.Level.MarkVerticesInStartPosition();
-		}
-
-		private void mi_AttemptMoveVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
-		{
-			_viewModel.Game.Level.AttemptSendVerticesToStartPositionWithoutCrossings();
-		}
-
-		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
-		{
-			_viewModel.Game.Level.Edit_RandomizeVertices(ic_GameField.RenderSize);
-		}
-
-		bool debugShowing = false;
 		private void mi_DebugView_Click(object sender, RoutedEventArgs e)
 		{
-			if (debugShowing)
+			if (mi_DebugView.IsChecked)
 			{
-				debugShowing = false;
-
 				_viewModel.Game.Level.GameGraph.VertexCollectionChanged -= UpdateDebugOutput;
 				_viewModel.Game.Level.GameGraph.LineSegmentCollectionChanged -= UpdateDebugOutput;
 				_viewModel.Game.Level.GameGraph.IntersectionCollectionChanged -= UpdateDebugOutput;
@@ -542,8 +574,6 @@ namespace Untangle
 			}
 			else
 			{
-				debugShowing = true;
-
 				_viewModel.Game.Level.GameGraph.VertexCollectionChanged += UpdateDebugOutput;
 				_viewModel.Game.Level.GameGraph.LineSegmentCollectionChanged += UpdateDebugOutput;
 				_viewModel.Game.Level.GameGraph.IntersectionCollectionChanged += UpdateDebugOutput;
@@ -577,9 +607,9 @@ namespace Untangle
 			//textBoxDebugInfo.InvalidateVisual();
 		}
 
-		private void mi_AutoSolve_Click(object sender, RoutedEventArgs e)
-		{
-			_viewModel.AutoSolve();
-		}
+		#endregion
+
+		#endregion
+
 	}
 }

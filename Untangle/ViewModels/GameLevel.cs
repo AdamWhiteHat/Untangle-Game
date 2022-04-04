@@ -403,13 +403,14 @@ namespace Untangle.ViewModels
 		/// </summary>
 		public void ExitEditMode()
 		{
+			IsEditing = false;
+
 			_moveCount = 0;
 			_draggedVertex = null;
 			_dragStartPosition = new Point();
 			_dragEndPosition = new Point();
 			MoveHistory = new List<HistoricalMove>();
 			ClearJoinOperation();
-			IsEditing = false;
 
 			GameGraph = new Graph(GameGraph.Vertices, GameGraph.LineSegments);
 

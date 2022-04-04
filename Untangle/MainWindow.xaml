@@ -37,6 +37,26 @@
 		BorderThickness="2"
 		BorderBrush="LightGray"
 	>
+	<Window.Resources>
+		<DrawingBrush x:Key="SquareLattice" Stretch="None" TileMode="Tile"
+              Viewport="0,0 50,50" ViewportUnits="Absolute">
+			<!-- ^^^^^^^^^^^ set the size of the tile-->
+			<DrawingBrush.Drawing>
+				<GeometryDrawing>
+					<GeometryDrawing.Geometry>
+						<!-- draw a single X -->
+						<GeometryGroup>
+							<RectangleGeometry Rect="0,0 50,50"/>
+						</GeometryGroup>
+					</GeometryDrawing.Geometry>
+					<GeometryDrawing.Pen>
+						<!-- set color and thickness of lines -->
+						<Pen Thickness="1.5" Brush="Black" />
+					</GeometryDrawing.Pen>
+				</GeometryDrawing>
+			</DrawingBrush.Drawing>
+		</DrawingBrush>
+	</Window.Resources>
 	<Window.DataContext>
 		<vm:MainViewModel />
 	</Window.DataContext>
@@ -143,6 +163,7 @@
 						  Header="Mark Vertices In Start Position"
 						  Click="mi_ColorByStartPositions_Click" />
 				<Separator />
+				<MenuItem x:Name="mi_AutoSolve" Header="Attempt Auto-Solve" Click="mi_AutoSolve_Click" />
 				<MenuItem x:Name="mi_AttemptMoveVerticesToStartPositions"
 						  Header="Attempt To Send Vertices To Start Pos W/O Crossings"
 						  Click="mi_AttemptMoveVerticesToStartPositions_Click" />
@@ -150,11 +171,6 @@
                           Header="Randomize Vertices' Locations"
                           Click="mi_RandomizeVertices_Click"
 						  Visibility="Collapsed" />
-				<Separator />
-				<MenuItem x:Name="mi_DebugView"
-                          Header="Debug View"
-                          Click="mi_DebugView_Click"/>
-				<MenuItem x:Name="mi_AutoSolve" Header="Attempt Auto-Solve" Click="mi_AutoSolve_Click" />
 			</MenuItem>
 			<MenuItem x:Name="mi_Settings"
                       Header="{lex:Loc}">
@@ -174,11 +190,20 @@
 						</Style>
 					</MenuItem.ItemContainerStyle>
 				</MenuItem>
+				<Separator />
 				<MenuItem x:Name="mi_Transparent" 
 						  Header="Transparent Dialog"
 						  IsCheckable="true"
 						  Click="mi_Transparent_Click"  />
-
+				<MenuItem x:Name="mi_ShowGridLines" 
+						  Header="Show Grid Lines"
+						  IsCheckable="true"
+						  Click="mi_ShowGridLines_Click"  />
+				<Separator />
+				<MenuItem x:Name="mi_DebugView"
+                          Header="Debug View"
+						  IsCheckable="true"
+                          Click="mi_DebugView_Click"/>
 			</MenuItem>
 			<MenuItem x:Name="mi_Help"
                       Header="{lex:Loc}">
@@ -237,45 +262,48 @@
 		<Border x:Name="borderGameField" Margin="3"
 				Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="6"
 				BorderBrush="Transparent" BorderThickness="2">
-			<ItemsControl x:Name="ic_GameField"
+
+			<Grid x:Name="gameboardGrid" Background="Transparent" >
+
+				<ItemsControl x:Name="ic_GameField"
 						  ItemsSource="{Binding Game.Level.GameObjects}">
-				<ItemsControl.LayoutTransform>
-					<ScaleTransform ScaleX="{Binding ScaleZoom}" ScaleY="{Binding ScaleZoom}" />
-				</ItemsControl.LayoutTransform>
-				<ItemsControl.Resources>
-					<Style x:Key="vertexStyle"
+					<ItemsControl.LayoutTransform>
+						<ScaleTransform ScaleX="{Binding ScaleZoom}" ScaleY="{Binding ScaleZoom}" />
+					</ItemsControl.LayoutTransform>
+					<ItemsControl.Resources>
+						<Style x:Key="vertexStyle"
                        TargetType="Ellipse">
-						<Style.Triggers>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.Normal}">
-								<Setter Property="Fill"  Value="{Binding Color}" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.ConnectedToHighlighted}">
-								<Setter Property="Fill"  Value="Red" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.Dragged}">
-								<Setter Property="Fill" Value="LightSlateGray" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.UnderMouse}">
-								<Setter Property="Fill" Value="Orange" />
-							</DataTrigger>
-						</Style.Triggers>
-					</Style>
-					<Style x:Key="lineSegmentStyle"
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.Normal}">
+									<Setter Property="Fill"  Value="{Binding Color}" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.ConnectedToHighlighted}">
+									<Setter Property="Fill"  Value="Red" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.Dragged}">
+									<Setter Property="Fill" Value="LightSlateGray" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.UnderMouse}">
+									<Setter Property="Fill" Value="Orange" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+						<Style x:Key="lineSegmentStyle"
                        TargetType="Line">
-						<Style.Triggers>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Normal}">
-								<Setter Property="Stroke" Value="Black" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Intersected}">
-								<Setter Property="Stroke"  Value="Firebrick" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Highlighted}">
-								<Setter Property="Stroke" Value="DarkGreen" />
-							</DataTrigger>
-						</Style.Triggers>
-					</Style>
-					<DataTemplate DataType="{x:Type vm:Vertex}">
-						<Ellipse Style="{StaticResource vertexStyle}"
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Normal}">
+									<Setter Property="Stroke" Value="Black" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Intersected}">
+									<Setter Property="Stroke"  Value="Firebrick" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Highlighted}">
+									<Setter Property="Stroke" Value="DarkGreen" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+						<DataTemplate DataType="{x:Type vm:Vertex}">
+							<Ellipse Style="{StaticResource vertexStyle}"
                              Width="{Binding Size}"
                              Height="{Binding Size}"
                              Stroke="Transparent"
@@ -283,43 +311,46 @@
                              MouseEnter="Vertex_MouseEnter"
                              MouseLeave="Vertex_MouseLeave"
                              MouseDown="Vertex_MouseDown">
-							<Ellipse.RenderTransform>
-								<TransformGroup>
-									<TranslateTransform X="{Binding X}" Y="{Binding Y}" />
-									<TranslateTransform X="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
+								<Ellipse.RenderTransform>
+									<TransformGroup>
+										<TranslateTransform X="{Binding X}" Y="{Binding Y}" />
+										<TranslateTransform X="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
                                                     Y="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}" />
-									<TranslateTransform X="{Binding Size, Converter={v:MultiplicationConverter}, ConverterParameter=-0.5}"
+										<TranslateTransform X="{Binding Size, Converter={v:MultiplicationConverter}, ConverterParameter=-0.5}"
                                                     Y="{Binding Size, Converter={v:MultiplicationConverter}, ConverterParameter=-0.5}" />
-								</TransformGroup>
-							</Ellipse.RenderTransform>
-						</Ellipse>
-					</DataTemplate>
-					<DataTemplate DataType="{x:Type vm:LineSegment}">
-						<Line Style="{StaticResource lineSegmentStyle}"
+									</TransformGroup>
+								</Ellipse.RenderTransform>
+							</Ellipse>
+						</DataTemplate>
+						<DataTemplate DataType="{x:Type vm:LineSegment}">
+							<Line Style="{StaticResource lineSegmentStyle}"
                           StrokeThickness="1.5"
                           X1="{Binding Vertex1.X}"
                           Y1="{Binding Vertex1.Y}"
                           X2="{Binding Vertex2.X}"
                           Y2="{Binding Vertex2.Y}">
-							<Line.RenderTransform>
-								<TranslateTransform X="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
+								<Line.RenderTransform>
+									<TranslateTransform X="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
                                                 Y="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}" />
-							</Line.RenderTransform>
-						</Line>
-					</DataTemplate>
-				</ItemsControl.Resources>
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<Canvas x:Name="gameCanvas" />
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-				<ItemsControl.ItemContainerStyle>
-					<Style>
-						<Setter Property="Panel.ZIndex"
+								</Line.RenderTransform>
+							</Line>
+						</DataTemplate>
+					</ItemsControl.Resources>
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<Canvas x:Name="gameCanvas" />
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemContainerStyle>
+						<Style>
+							<Setter Property="Panel.ZIndex"
                             Value="{Binding ZIndex}" />
-					</Style>
-				</ItemsControl.ItemContainerStyle>
-			</ItemsControl>
+						</Style>
+					</ItemsControl.ItemContainerStyle>
+				</ItemsControl>
+
+			</Grid>
+
 		</Border>
 	</Grid>
 </Window>
