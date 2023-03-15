@@ -8,7 +8,10 @@
  * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
  */
 
+using System;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Media.Animation;
 //using System.Runtime.CompilerServices;
 
 namespace Untangle.ViewModels
@@ -16,7 +19,7 @@ namespace Untangle.ViewModels
 	/// <summary>
 	/// A base class for all view model classes, implementing <see cref="INotifyPropertyChanged"/>.
 	/// </summary>
-	public abstract class ViewModelBase : INotifyPropertyChanged
+	public abstract class ViewModelBase : Animatable, INotifyPropertyChanged
 	{
 		#region INotifyPropertyChanged Members
 
@@ -26,6 +29,10 @@ namespace Untangle.ViewModels
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		#endregion
+
+		internal static Duration Animation_Duration = new Duration(TimeSpan.FromMilliseconds(400));
+		internal static EasingFunctionBase Animation_EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseInOut };
+		//new SineEase() { EasingMode = EasingMode.EaseOut };
 
 		/// <summary>
 		/// Raises the <see cref="PropertyChanged"/> event with the specified

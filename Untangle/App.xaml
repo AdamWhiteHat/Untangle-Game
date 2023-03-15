@@ -11,7 +11,25 @@
 <Application x:Class="Untangle.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
-	<Application.Resources>
-	</Application.Resources>
+             xmlns:interactivity="http://schemas.microsoft.com/expression/2010/interactivity" 
+             xmlns:interactions="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+			 xmlns:local="clr-namespace:Untangle"
+             StartupUri="Views\MainWindow.xaml">
+    <Application.Resources>
+
+        <ResourceDictionary>
+
+            <SolidColorBrush x:Key="windowTitlebarColor">#6495ED</SolidColorBrush>
+            <SolidColorBrush x:Key="windowBackgroundColor">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="windowControlColor">#F0F0F0</SolidColorBrush>
+            <SolidColorBrush x:Key="windowBorderColor">#D3D3D3</SolidColorBrush>
+
+            <SolidColorBrush x:Key="LineSegmentNormalColor">#000000</SolidColorBrush>
+            <SolidColorBrush x:Key="LineSegmentIntersectedColor">#B22222</SolidColorBrush>
+            <SolidColorBrush x:Key="LineSegmentHighlightedColor">#006400</SolidColorBrush>
+
+        </ResourceDictionary>
+
+    </Application.Resources>
 </Application>

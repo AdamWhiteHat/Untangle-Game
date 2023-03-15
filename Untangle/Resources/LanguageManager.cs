@@ -15,6 +15,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using Microsoft.Win32;
 using Untangle.ViewModels;
 using WPFLocalizeExtension.Engine;
@@ -223,6 +224,12 @@ namespace Untangle.Resources
 					Constants.LanguageValueName,
 					SelectedLanguage.Culture.Name);
 			}
+		}
+
+
+		protected override Freezable CreateInstanceCore()
+		{
+			return new LanguageManager();
 		}
 	}
 }

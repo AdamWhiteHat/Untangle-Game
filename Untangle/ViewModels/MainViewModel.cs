@@ -50,7 +50,7 @@ namespace Untangle.ViewModels
 		/// <summary>
 		/// Size of the game board. For restricting randomizing vertex positions.
 		/// </summary>
-		private Size _gameBoardSize = Size.Empty;
+		internal Size _gameBoardSize = Size.Empty;
 
 		/// <summary>
 		/// Specifies whether a save game prompt should be displayed if the user is about to lose
@@ -156,16 +156,27 @@ namespace Untangle.ViewModels
 
 		private Size CalculateGameBoardSize()
 		{
-			double maxX = Game.Level.GameGraph.Vertices.Max(v => v.Position.X);
-			double maxY = Game.Level.GameGraph.Vertices.Max(v => v.Position.Y);
+			double maxX = Game.Level.GameGraph.Vertices.Max(v => v.X);
+			double maxY = Game.Level.GameGraph.Vertices.Max(v => v.Y);
 			return new Size(maxX, maxY);
 		}
+
 		public void AutoSolve()
 		{
 			AutoSolver.Solve(Game.Level.GameGraph, _gameBoardSize);
 		}
 
 		#region New/Load/Save/Edit
+
+		/// <summary>
+		/// The initial first game to load after the application loads.
+		/// </summary>
+		public void InitialGame()
+		{
+			var levelGenerator = new LevelGenerator(2, 3, 4, 2);
+			var level = levelGenerator.GenerateLevel(_gameBoardSize);
+			Game = new Game(level, 1);
+		}
 
 		/// <summary>
 		/// Starts a new game of Untangle from scratch.
@@ -182,13 +193,12 @@ namespace Untangle.ViewModels
 
 			_gameBoardSize = gameBoardSize;
 
-
 			NewLevelParameters newLevelParametersWindows = new NewLevelParameters(1 + Game.LevelNumber, 2 + Game.LevelNumber, 2, 4);
 
 			bool? dialogResult = newLevelParametersWindows.ShowDialog();
 			if (dialogResult.HasValue && dialogResult.Value == true)
 			{
-				if (newLevelParametersWindows.GenerateIsSelected)
+				if (newLevelParametersWindows.IsGeneratedTypeSelected)
 				{
 					int columns = newLevelParametersWindows.Columns;
 					int rows = newLevelParametersWindows.Rows;
@@ -199,7 +209,7 @@ namespace Untangle.ViewModels
 					var level = levelGenerator.GenerateLevel(_gameBoardSize);
 					Game = new Game(level, Game.LevelNumber);
 				}
-				else if (newLevelParametersWindows.GraphNameIsSelected)
+				else if (newLevelParametersWindows.IsGraphNameTypeSelected)
 				{
 					int graphIndex = newLevelParametersWindows.GraphIndex;
 
@@ -509,6 +519,11 @@ namespace Untangle.ViewModels
 		}
 
 		#endregion
+
+		protected override Freezable CreateInstanceCore()
+		{
+			return new MainViewModel();
+		}
 
 	}
 }

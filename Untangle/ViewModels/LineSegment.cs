@@ -127,6 +127,9 @@ namespace Untangle.ViewModels
 			get { return Distance(Point1, Point2); }
 		}
 
+		private LineSegment()
+		{ }
+
 		/// <summary>
 		/// Initializes a new <see cref="LineSegment"/> instance with the specified two endpoint
 		/// vertices.
@@ -158,6 +161,11 @@ namespace Untangle.ViewModels
 		public static Point MidPoint(Point a, Point b)
 		{
 			return new Point((a.X + b.X) / 2, (a.Y + b.Y) / 2);
+		}
+
+		protected override Freezable CreateInstanceCore()
+		{
+			return new LineSegment();
 		}
 
 		public override string ToString()

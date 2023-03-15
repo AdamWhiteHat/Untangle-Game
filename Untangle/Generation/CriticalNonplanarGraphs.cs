@@ -7,7 +7,7 @@ using Untangle.ViewModels;
 
 namespace Untangle.Generation
 {
-	public class CriticalNonplanarGraphs
+	public static class CriticalNonplanarGraphs
 	{
 		/// <summary>
 		/// Generates a level from a random Critical Non-planar Graph with 1 random vertex removed.

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Msagl.GraphmapsWithMesh;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -12,6 +13,15 @@ using PointF = System.Drawing.PointF;
 
 namespace Untangle.Generation
 {
+	public enum GraphLayoutTypes
+	{
+		Random,
+		Circle,
+		Lattice,
+		Hexagonal,
+		CriticalNonplanarGraphs
+	}
+
 	public static class GraphLayout
 	{
 		public static int SelectRandomLayout(Graph graph, System.Windows.Size size)
@@ -42,6 +52,42 @@ namespace Untangle.Generation
 			return intersectionCount;
 		}
 
+		public static int ChooseLayout(Graph graph, System.Windows.Size size, GraphLayoutTypes layout)
+		{
+			int intersectionCount = 0;
+			while (intersectionCount == 0)
+			{
+				switch (layout)
+				{
+					case GraphLayoutTypes.Circle:
+						intersectionCount = GraphLayout.Circle(graph);
+						break;
+					case GraphLayoutTypes.Lattice:
+						intersectionCount = GraphLayout.Lattice(graph, size, (int)size.Height / 101, (int)size.Width / 101);
+						break;
+					case GraphLayoutTypes.Hexagonal:
+						intersectionCount = Hexagonal(graph, size);
+						break;
+					case GraphLayoutTypes.Random:
+					default:
+						intersectionCount = GraphLayout.RandomPoints(graph, size);
+						break;
+				}
+			}
+
+			return intersectionCount;
+		}
+
+		private static int _peturbMagnitude = 6;
+		private static System.Windows.Point PreturbPosition(System.Windows.Point In)
+		{
+			int xOffset = RandomSingleton.Next(1, _peturbMagnitude) * (RandomSingleton.NextBool() ? -1 : 1);
+			int yOffset = RandomSingleton.Next(1, _peturbMagnitude) * (RandomSingleton.NextBool() ? -1 : 1);
+
+			return new System.Windows.Point(In.X + xOffset, In.Y + yOffset);
+		}
+
+
 		/// <summary>
 		/// Resets the positions of all vertices in the game level, arranging them in a circle in
 		/// random order.
@@ -58,7 +104,9 @@ namespace Untangle.Generation
 				ViewModels.Vertex vertex = verticesToScramble[vertexIndex];
 				double angle = Math.PI * 2 * i / vertexCount;
 				var position = new System.Windows.Point(Math.Cos(angle) * 300.0, -Math.Sin(angle) * 300.0);
-				vertex.Position = position;
+
+				vertex.SetPosition(position);
+				vertex.StartingPosition = position;
 
 				verticesToScramble.RemoveAt(vertexIndex);
 				i++;
@@ -87,9 +135,10 @@ namespace Untangle.Generation
 
 				int x = RandomSingleton.Next(-width, width);
 				int y = RandomSingleton.Next(-height, height);
-
 				var position = new System.Windows.Point(x, y);
-				vertex.Position = position;
+
+				vertex.SetPosition(position);
+				vertex.StartingPosition = position;
 
 				verticesToScramble.RemoveAt(vertexIndex);
 				i++;
@@ -166,8 +215,9 @@ namespace Untangle.Generation
 				int x = point.Item1;
 				int y = point.Item2;
 
-				var position = new System.Windows.Point(x, y);
-				vertex.Position = position;
+				var position = PreturbPosition(new System.Windows.Point(x, y));
+				vertex.SetPosition(position);
+				vertex.StartingPosition = position;
 
 				verticesToScramble.RemoveAt(vertexIndex);
 				i++;
@@ -176,7 +226,6 @@ namespace Untangle.Generation
 			graph.CalculateAllIntersections();
 			return graph.IntersectionCount;
 		}
-
 
 		/// <summary>
 		///  Resets the positions of all vertices in the game level, arranging them in a Hexagonal lattice.
@@ -208,9 +257,13 @@ namespace Untangle.Generation
 					break;
 				}
 				int nextIndex = RandomSingleton.Next(0, vertexPool.Count);
-				ViewModels.Vertex selected = vertexPool[nextIndex];
-				vertexPool.Remove(selected);
-				selected.SetPosition(new System.Windows.Point(point.X - xAdjustment, point.Y - yAdjustment));
+				ViewModels.Vertex vertex = vertexPool[nextIndex];
+
+				var position = PreturbPosition(new System.Windows.Point(point.X - xAdjustment, point.Y - yAdjustment));
+				vertex.SetPosition(position);
+				vertex.StartingPosition = position;
+
+				vertexPool.Remove(vertex);
 			}
 
 			graph.CalculateAllIntersections();
@@ -268,10 +321,6 @@ namespace Untangle.Generation
 		{
 			bool IEqualityComparer<PointF>.Equals(PointF x, PointF y)
 			{
-				if (x == null)
-				{
-					return (y == null) ? true : false;
-				}
 				return (x.X == y.X && x.Y == y.Y) ? true : false;
 			}
 

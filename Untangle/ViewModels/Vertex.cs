@@ -16,6 +16,9 @@ using System.Collections.Generic;
 using Untangle.Enums;
 using System.Windows.Media;
 using System.Numerics;
+using System.Windows.Shapes;
+//using Microsoft.Msagl.Core.Geometry.Curves;
+//using Microsoft.Msagl.Drawing;
 
 namespace Untangle.ViewModels
 {
@@ -38,16 +41,47 @@ namespace Untangle.ViewModels
 		/// The unique identifier of the vertex in the saved game level.
 		/// </summary>
 		[XmlAttribute]
-		public int Id { get; set; }
+		public int Id
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					_id = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+		private int _id;
 
 		/// <summary>
 		/// The size of the vertex on the game field.
-		/// </summary>
+		/// </summary>		
 		[XmlIgnore]
 		public double Size
 		{
 			get { return 30; }
 		}
+
+		/// <summary>Identifies the <see cref="P:Untangle.ViewModels.Vertex.X" /> dependency property.</summary>
+		public static readonly DependencyProperty XProperty = DependencyProperty.Register(
+		  "X",
+		  typeof(double),
+		  typeof(Vertex),
+		  new FrameworkPropertyMetadata(new PropertyChangedCallback(OnXPropertyChanged))
+		// { AffectsRender = true }
+		);
+
+		/// <summary>Identifies the <see cref="P:Untangle.ViewModels.Vertex.Y" /> dependency property.</summary>
+		public static readonly DependencyProperty YProperty = DependencyProperty.Register(
+		  "Y",
+		  typeof(double),
+		  typeof(Vertex),
+		  new FrameworkPropertyMetadata(new PropertyChangedCallback(OnYPropertyChanged))
+		// { AffectsRender = true }
+		);
+
 
 		/// <summary>
 		/// The X coordinate of the vertex on the game field.
@@ -55,19 +89,14 @@ namespace Untangle.ViewModels
 		[XmlIgnore]
 		public double X
 		{
-			get { return _position.X; }
-		}
-
-		[XmlAttribute("X")]
-		public string XString
-		{
-			get { return X.ToString("####0.######"); }
+			get { return (double)GetValue(XProperty); }
 			set
 			{
-				double x = 0;
-				if (Double.TryParse(value, out x))
+				double oldValue = (double)GetValue(XProperty);
+				if (Math.Round(oldValue, 4) != Math.Round(value, 4))
 				{
-					_position.X = x;
+					SetValue(XProperty, value);
+					OnPropertyChanged(nameof(X));
 				}
 			}
 		}
@@ -78,21 +107,47 @@ namespace Untangle.ViewModels
 		[XmlIgnore]
 		public double Y
 		{
-			get { return _position.Y; }
+			get { return (double)GetValue(YProperty); }
+			set
+			{
+				double oldValue = (double)GetValue(YProperty);
+				if (Math.Round(oldValue, 4) != Math.Round(value, 4))
+				{
+					SetValue(YProperty, value);
+					OnPropertyChanged(nameof(Y));
+				}
+			}
+		}
+
+		[XmlAttribute("X")]
+		public string XString
+		{
+			get { return X.ToString("####0.####"); }
+			//set
+			//{
+			//	double x = 0;
+			//	if (Double.TryParse(value, out x))
+			//	{
+			//		_position.X = x;
+			//		OnPropertyChanged(nameof(X));
+
+			//	}
+			//}
 		}
 
 		[XmlAttribute("Y")]
 		public string YString
 		{
-			get { return Y.ToString("####0.######"); }
-			set
-			{
-				double y = 0;
-				if (Double.TryParse(value, out y))
-				{
-					_position.Y = y;
-				}
-			}
+			get { return Y.ToString("####0.####"); }
+			//set
+			//{
+			//	double y = 0;
+			//	if (Double.TryParse(value, out y))
+			//	{
+			//		_position.Y = y;
+			//		OnPropertyChanged(nameof(Y));
+			//	}
+			//}
 		}
 
 		/// <summary>
@@ -141,6 +196,7 @@ namespace Untangle.ViewModels
 				OnPropertyChanged(ZIndexPropertyName);
 			}
 		}
+		private VertexState _state;
 
 		[XmlIgnore]
 		public Brush Color
@@ -230,6 +286,7 @@ namespace Untangle.ViewModels
 		/// </summary>
 		private readonly Dictionary<Vertex, LineSegment> _lineSegmentsMap;
 
+		/*
 		/// <summary>
 		/// The position of the vertex on the game field.
 		/// </summary>
@@ -248,15 +305,13 @@ namespace Untangle.ViewModels
 			}
 		}
 		private Point _position;
+		*/
 
 		public Point? StartingPosition { get; set; }
 
-		public string Name { get { return $"Vertex_{Id}"; } }
+		public bool AtStartPosition { get { return (StartingPosition.HasValue) ? (X == StartingPosition.Value.X && Y == StartingPosition.Value.Y) : false; } }
 
-		/// <summary>
-		/// The current state of the vertex.
-		/// </summary>
-		private VertexState _state;
+		public string Name { get { return $"Vertex_{Id}"; } }
 
 		/// <summary>
 		/// Initializes a new <see cref="Vertex"/> instance with no specific position on the game
@@ -268,29 +323,27 @@ namespace Untangle.ViewModels
 		}
 
 		/// <summary>
+		/// Initializes a new instance of the <see cref="Vertex"/> class.
+		/// </summary>
+		/// <param name="location">The location point.</param>
+		public Vertex(Point location)
+			: this(location.X, location.Y)
+		{
+		}
+
+		/// <summary>
 		/// Initializes a new <see cref="Vertex"/> instance with the specified position on the game
 		/// field.
 		/// </summary>
 		/// <param name="x">The X coordinate of the vertex on the game field.</param>
 		/// <param name="y">The Y coordinate of the vertex on the game field.</param>
 		public Vertex(double x, double y)
-			: this(new Point(x, y))
-		{
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="Vertex"/> class.
-		/// </summary>
-		/// <param name="location">The location point.</param>
-		public Vertex(Point location)
 		{
 			_lineSegmentsMap = new Dictionary<Vertex, LineSegment>();
 			_state = VertexState.Normal;
-			_position = location;
-			if (!(location.X == 0 && location.Y == 0))
-			{
-				StartingPosition = _position;
-			}
+			X = x;
+			Y = y;
+			StartingPosition = new Point(X, Y);
 		}
 
 		/// <summary>
@@ -362,9 +415,17 @@ namespace Untangle.ViewModels
 		/// <param name="position">The new position of the vertex.</param>
 		public void SetPosition(Point position)
 		{
-			_position = position;
-			OnPropertyChanged("X");
-			OnPropertyChanged("Y");
+			X = position.X;
+			Y = position.Y;
+		}
+
+		/// <summary>
+		/// Returns a Point object with this vertex's position.
+		/// </summary>
+		/// <returns>A Point object with this vertex's position.</returns>
+		public Point GetPosition()
+		{
+			return new Point(X, Y);
 		}
 
 		public void NextColor()
@@ -383,9 +444,27 @@ namespace Untangle.ViewModels
 			}
 		}
 
+		private static void OnXPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			Vertex v = (Vertex)d;
+			v.X = (double)e.NewValue;
+		}
+
+		private static void OnYPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			Vertex v = (Vertex)d;
+			v.Y = (double)e.NewValue;
+		}
+
+
+		protected override Freezable CreateInstanceCore()
+		{
+			return new Vertex();
+		}
+
 		public override string ToString()
 		{
-			return $"#{Id}: {string.Join(" , ", LineSegments.Select(ls => ls.ToString()))}";
+			return $"#{Id} => ({Math.Round(X, 2)}, {Math.Round(Y, 2)}): {string.Join(" , ", LineSegments.Select(ls => ls.ToString()))}";
 		}
 	}
 }

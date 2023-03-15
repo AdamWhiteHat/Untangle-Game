@@ -57,6 +57,10 @@ namespace Untangle.ViewModels
 		}
 		private GameLevel _level;
 
+		private Game()
+		{
+		}
+
 		/// <summary>
 		/// Initializes a new <see cref="Game"/> instance with the specified start level number
 		/// and generates the start level.
@@ -66,7 +70,9 @@ namespace Untangle.ViewModels
 		public Game(int startLevelNumber)
 		{
 			LevelNumber = startLevelNumber;
-			GenerateCurrentLevel();
+			var levelGenerator = new LevelGenerator(1 + LevelNumber, 2 + LevelNumber, 4);
+
+			Level = levelGenerator.GenerateLevel();
 		}
 
 		/// <summary>
@@ -81,17 +87,9 @@ namespace Untangle.ViewModels
 			LevelNumber = levelNumber;
 		}
 
-		/// <summary>
-		/// Generates the current level of the Untangle game.
-		/// </summary>
-		/// <remarks>
-		/// <para>The number of vertices in the generate level depends on the current game level's
-		/// number.</para>
-		/// </remarks>
-		private void GenerateCurrentLevel()
+		protected override Freezable CreateInstanceCore()
 		{
-			var levelGenerator = new LevelGenerator(1 + _levelNumber, 2 + _levelNumber, 4);
-			Level = levelGenerator.GenerateLevel();
+			return new Game();
 		}
 	}
 }

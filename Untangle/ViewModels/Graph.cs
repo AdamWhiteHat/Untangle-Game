@@ -101,6 +101,18 @@ namespace Untangle.ViewModels
 		}
 		private Dictionary<LineSegment, HashSet<LineSegment>> _intersections;
 
+		private Graph()
+		{
+			_verticesList = new ObservableCollection<Vertex>();
+			_lineSegmentsList = new ObservableCollection<LineSegment>();
+
+			_verticesList.CollectionChanged += CollectionChanged_Vertices;
+			_lineSegmentsList.CollectionChanged += CollectionChanged_LineSegments;
+
+			_intersections = new Dictionary<LineSegment, HashSet<LineSegment>>();
+			IntersectionCount = 0;
+		}
+
 		public Graph(IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
 			: this(GenerateNewUID(), vertices, lineSegments)
 		{
@@ -109,6 +121,7 @@ namespace Untangle.ViewModels
 		public Graph(string uid, IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
 		{
 			UID = uid;
+
 			_verticesList = new ObservableCollection<Vertex>(vertices);
 			_lineSegmentsList = new ObservableCollection<LineSegment>(lineSegments);
 
@@ -340,7 +353,7 @@ namespace Untangle.ViewModels
 		/// of the line segments attached to it might have changed, so it is unnecessary to
 		/// recalculate all intersections in the game level.</para>
 		/// </remarks>
-		public void RecalculateIntersectionsForVertex(Vertex vertex)
+		public void RecalculateIntersections(Vertex vertex)
 		{
 			bool intersectionChanged = false;
 			foreach (LineSegment lineSegment in vertex.LineSegments)
@@ -361,10 +374,13 @@ namespace Untangle.ViewModels
 							intersectionChanged = true;
 						}
 					}
-					else if (intersectingSegments.Contains(otherSegment))
+					else
 					{
-						RemoveIntersection(lineSegment, otherSegment);
-						intersectionChanged = true;
+						if (intersectingSegments.Contains(otherSegment))
+						{
+							RemoveIntersection(lineSegment, otherSegment);
+							intersectionChanged = true;
+						}
 					}
 				}
 			}
@@ -379,6 +395,7 @@ namespace Untangle.ViewModels
 		/// them.
 		/// </summary>
 		public void CalculateAllIntersections()
+
 		{
 			ClearIntersections();
 			foreach (LineSegment lineSegment in _lineSegmentsList)
@@ -402,6 +419,9 @@ namespace Untangle.ViewModels
 			OnIntersectionCollectionChanged();
 		}
 
-
+		protected override Freezable CreateInstanceCore()
+		{
+			return new Graph();
+		}
 	}
 }

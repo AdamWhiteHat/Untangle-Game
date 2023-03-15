@@ -17,6 +17,11 @@ namespace Untangle
 			}
 		}
 
+		public static bool NextBool()
+		{
+			return (_random.Next(0, 2) == 1);
+		}
+
 		public static int Next(int maxValue)
 		{
 			return _random.Next(maxValue);

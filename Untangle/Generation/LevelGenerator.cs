@@ -15,6 +15,7 @@ using Untangle.ViewModels;
 using System.Windows;
 using static Untangle.ViewModels.GameLevel;
 using System.Drawing;
+using Microsoft.Msagl.GraphmapsWithMesh;
 
 namespace Untangle.Generation
 {
@@ -91,15 +92,25 @@ namespace Untangle.Generation
 		}
 
 		/// <summary>
-		/// Generates a level which fits the constraints of the level generator.
+		/// Generates level zero.
 		/// </summary>
 		/// <returns>The generated level.</returns>
 		public GameLevel GenerateLevel()
 		{
 			Initialize();
-			return GameLevel.Create(_connectedSubgraphs.Keys);
+
+			GameLevel result = GameLevel.Create(_connectedSubgraphs.Keys);
+			int intersectionCount = GraphLayout.Circle(result.GameGraph);
+			result.GameGraph.IntersectionCount = intersectionCount;
+			return result;
 		}
 
+		/// <summary>
+		/// Generates a level which fits the constraints of the level generator.
+		/// </summary>
+		/// <param name="gameboardSize">The size of the game window.
+		/// The Level generator will generate all the tame assets within these bounds.</param>
+		/// <returns>The generated level.</returns>
 		public GameLevel GenerateLevel(System.Windows.Size gameboardSize)
 		{
 			Initialize();
@@ -107,8 +118,7 @@ namespace Untangle.Generation
 			GameLevel result = null;
 			if (!_connectedSubgraphs.Any())
 			{
-				Graph gameGraph = new Graph(new List<ViewModels.Vertex>(), new List<LineSegment>());
-				result = new GameLevel(gameGraph);
+				result = GenerateLevel();
 			}
 			else
 			{
@@ -127,6 +137,20 @@ namespace Untangle.Generation
 			CreateVertices();
 			while (CheckEdgesNeeded())
 			{
+				if (_availableVertices.Count == 0)
+				{
+					bool done =
+						_connectedSubgraphs
+						.Values
+						.ToArray()
+						.All(v => v.ConnectedVertexCount >= _maxEdges);
+
+					if (done)
+					{
+						return;
+					}
+				}
+
 				AddEdge();
 			}
 		}
