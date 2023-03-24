@@ -121,6 +121,6 @@
     <value>The specified saved game file is damaged or it does not contain a valid Untangle saved game.</value>
   </data>
   <data name="SavedGameVersionNotSupported" xml:space="preserve">
-    <value>The specified saved game was created by a newer version of the game and cannot be loaded.</value>
+    <value>The specified saved game was created by a different version of the game, and cannot be loaded.</value>
   </data>
 </root>

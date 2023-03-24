@@ -72,6 +72,11 @@ namespace Untangle.Saves
 
 			Vertex[] vertices = game.Level.GameGraph.Vertices;
 
+			foreach (Vertex node in vertices)
+			{
+				node.StartingPosition = new System.Windows.Point(node.X, node.Y);
+			}
+
 			// Create saved game objects
 			var savedGame = new SavedGame
 			{
@@ -82,7 +87,7 @@ namespace Untangle.Saves
 				VertexCount = game.Level.GameGraph.VertexCount,
 				IntersectionCount = game.Level.GameGraph.IntersectionCount,
 				//Vertices = savedVertices.Values.ToArray(),
-				Vertices = vertices,
+				Vertices = vertices.ToArray(),
 				MoveCount = game.Level.MoveCount
 			};
 
@@ -110,7 +115,7 @@ namespace Untangle.Saves
 			SavedGame savedGame = LoadFromFile(fileName);
 
 			// Verify saved game version
-			if (savedGame.Version > CurrentVersion)
+			if (savedGame.Version != CurrentVersion)
 			{
 				throw new Exception(ExceptionMessages.SavedGameVersionNotSupported);
 			}

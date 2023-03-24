@@ -65,9 +65,32 @@ namespace Untangle
 
 			ic_GameField.SizeChanged += Ic_GameField_SizeChanged;
 			this.Loaded += MainWindow_Loaded;
+			_viewModel.PropertyChanged += _viewModel_PropertyChanged;
+
 
 			ic_GameField.ClipToBounds = true;
 			ic_GameField.UseLayoutRounding = true;
+		}
+
+		private void _viewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == "IsEditing")
+			{
+				if (_viewModel.IsEditing)
+				{
+					mi_LevelBuilder.Header = ExitLevelBuilder_MenuText;
+					borderGameField.BorderBrush = Brushes.Red;
+					levelEditorInstructions.Visibility = Visibility.Visible;
+					mi_RandomizeVertices.Visibility = Visibility.Visible;
+				}
+				else
+				{
+					mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
+					borderGameField.BorderBrush = Brushes.Transparent;
+					levelEditorInstructions.Visibility = Visibility.Hidden;
+					mi_RandomizeVertices.Visibility = Visibility.Collapsed;
+				}
+			}
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -458,8 +481,6 @@ namespace Untangle
 			matchingVertex.BeginAnimation(Vertex.YProperty, yAnimation);
 		}
 
-
-
 		/// <summary>
 		///  Handles the Executed event of the command binding for the Redo command.
 		/// </summary>
@@ -523,21 +544,6 @@ namespace Untangle
 		private void MenuCommand_LevelBuilder_Click(object sender, RoutedEventArgs e)
 		{
 			_viewModel.ToggleLevelEditor();
-			if (_viewModel.IsEditing)
-			{
-				mi_LevelBuilder.Header = ExitLevelBuilder_MenuText;
-				borderGameField.BorderBrush = Brushes.Red;
-				levelEditorInstructions.Visibility = Visibility.Visible;
-				mi_RandomizeVertices.Visibility = Visibility.Visible;
-			}
-			else
-			{
-				mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
-				borderGameField.BorderBrush = Brushes.Transparent;
-				levelEditorInstructions.Visibility = Visibility.Hidden;
-				mi_RandomizeVertices.Visibility = Visibility.Collapsed;
-			}
-
 		}
 
 		#region Color Vertices
@@ -648,6 +654,12 @@ namespace Untangle
 			output.AppendLine();
 			output.AppendLine("Intersections:");
 			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.Intersections.Select(v => $"{v.Key}:" + Environment.NewLine + "\t" + $"{string.Join(Environment.NewLine + "\t", v.Value.Select(h => h.ToString()))}")));
+
+			output.AppendLine();
+			output.AppendLine("Starting Position(s):");
+			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.Vertices.Select(v => $"({v.StartingPosition.Value.X}, {v.StartingPosition.Value.Y})")));
+
+			output.AppendLine();
 
 			textBoxDebugInfo.SetCurrentValue(TextBox.TextProperty, output.ToString());
 			//textBoxDebugInfo.InvalidateVisual();

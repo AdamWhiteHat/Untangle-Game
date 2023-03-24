@@ -85,8 +85,8 @@ namespace Untangle.ViewModels
 
 		/// <summary>
 		/// The X coordinate of the vertex on the game field.
-		/// </summary>
-		[XmlIgnore]
+		/// </summary>		
+		[XmlAttribute(AttributeName = "X", DataType = "double")]
 		public double X
 		{
 			get { return (double)GetValue(XProperty); }
@@ -104,7 +104,7 @@ namespace Untangle.ViewModels
 		/// <summary>
 		/// The Y coordinate of the vertex on the game field.
 		/// </summary>
-		[XmlIgnore]
+		[XmlAttribute(AttributeName = "Y", DataType = "double")]
 		public double Y
 		{
 			get { return (double)GetValue(YProperty); }
@@ -119,7 +119,7 @@ namespace Untangle.ViewModels
 			}
 		}
 
-		[XmlAttribute("X")]
+		[XmlIgnore]
 		public string XString
 		{
 			get { return X.ToString("####0.####"); }
@@ -135,7 +135,7 @@ namespace Untangle.ViewModels
 			//}
 		}
 
-		[XmlAttribute("Y")]
+		[XmlIgnore]
 		public string YString
 		{
 			get { return Y.ToString("####0.####"); }
@@ -286,29 +286,9 @@ namespace Untangle.ViewModels
 		/// </summary>
 		private readonly Dictionary<Vertex, LineSegment> _lineSegmentsMap;
 
-		/*
-		/// <summary>
-		/// The position of the vertex on the game field.
-		/// </summary>
-		public Point Position
-		{
-			get { return _position; }
-			set
-			{
-				if (!_position.Equals(value))
-				{
-					_position = value;
-					OnPropertyChanged(nameof(X));
-					OnPropertyChanged(nameof(Y));
-					OnPropertyChanged(nameof(Position));
-				}
-			}
-		}
-		private Point _position;
-		*/
-
 		public Point? StartingPosition { get; set; }
 
+		[XmlIgnore]
 		public bool AtStartPosition { get { return (StartingPosition.HasValue) ? (X == StartingPosition.Value.X && Y == StartingPosition.Value.Y) : false; } }
 
 		public string Name { get { return $"Vertex_{Id}"; } }

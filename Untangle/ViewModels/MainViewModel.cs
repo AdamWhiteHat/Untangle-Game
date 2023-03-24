@@ -62,7 +62,22 @@ namespace Untangle.ViewModels
 		/// </remarks>
 		private bool _needSaveGamePrompt;
 
-		public bool IsEditing { get; private set; } = false;
+		public bool IsEditing
+		{
+			get
+			{
+				return _isEditing;
+			}
+			private set
+			{
+				if (value != _isEditing)
+				{
+					_isEditing = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+		private bool _isEditing = false;
 
 		/// <summary>
 		/// The application's language manager.
@@ -190,6 +205,8 @@ namespace Untangle.ViewModels
 			{
 				return;
 			}
+
+
 
 			_gameBoardSize = gameBoardSize;
 
