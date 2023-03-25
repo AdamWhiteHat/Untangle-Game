@@ -71,13 +71,18 @@ namespace Untangle.ViewModels
 				   {
 					   PackingAspectRatio = aspectRatio,
 					   RemoveOverlaps = true,
-					    
+
 				   },
 				   layoutGraph
 			);
 			mdsLayout.Run();
 
 			var centers = layoutGraph.Nodes.Select(n => n.Center).ToList();
+
+			if (!centers.Any())
+			{
+				return;
+			}
 
 			double minX = centers.Select(c => c.X).Min();
 			double maxX = centers.Select(c => c.X).Max();

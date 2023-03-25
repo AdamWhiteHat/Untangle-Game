@@ -12,16 +12,14 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Untangle.Enums;
 using System.Windows.Media;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using Untangle.Generation;
-using System.Runtime.Intrinsics.X86;
 using System.Windows.Media.Animation;
 using XAMLMarkupExtensions.Base;
 using System.Windows.Threading;
-using Microsoft.Msagl.GraphmapsWithMesh;
+using Microsoft.Msagl.Core.DataStructures;
 
 namespace Untangle.ViewModels
 {
@@ -53,6 +51,12 @@ namespace Untangle.ViewModels
 		/// The dragged vertex end position
 		/// </summary>
 		private Point _dragEndPosition;
+
+		/// <summary>
+		/// Join two vertices with an edge temp variables
+		/// </summary>
+		private Vertex _selectedVertexPair_First = null;
+		private Vertex _selectedVertexPair_Second = null;
 
 		/// <summary>
 		/// The vertex which is currently under the mouse cursor, if any.
@@ -97,14 +101,36 @@ namespace Untangle.ViewModels
 		/// <value>
 		///   <c>true</c> if this instance is join operation in progress; otherwise, <c>false</c>.
 		/// </value>
-		private bool IsJoinOperationInProgress { get { return (IsEditing && !IsDragging && _selectedVertexPair_First != null); } }
+		private bool IsJoinOperationInProgress
+		{
+			get { return (IsEditing && !IsDragging && _selectedVertexPair_First != null); }
+		}
+
+		internal void ClearAllTempVars()
+		{
+			ClearJoinOperation();
+			ClearDragOperation();
+			ClearUndoRedoHistory();
+		}
+
 		private void ClearJoinOperation()
 		{
 			_selectedVertexPair_First = null;
 			_selectedVertexPair_Second = null;
 		}
-		private Vertex _selectedVertexPair_First = null;
-		private Vertex _selectedVertexPair_Second = null;
+
+		private void ClearDragOperation()
+		{
+			_draggedVertex = null;
+			_dragStartPosition = new Point();
+			_dragEndPosition = new Point();
+		}
+
+		private void ClearUndoRedoHistory()
+		{
+			MoveCount = 0;
+			MoveHistory = new List<HistoricalMove>();
+		}
 
 		/// <summary>
 		/// An enumeration of all vertices and line segments in the game level.
@@ -119,6 +145,10 @@ namespace Untangle.ViewModels
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets the game graph.
+		/// </summary>
+		/// <value>The game 
 		public Graph GameGraph
 		{
 			get
@@ -253,65 +283,130 @@ namespace Untangle.ViewModels
 			return new GameLevel(graph);
 		}
 
-		public static int ColorGraph(IEnumerable<Vertex> graph)
+		public static int ColorTheGraph(IEnumerable<Vertex> graph)
 		{
-			int guess = 2;
-			while (!IsChromaticNumber(graph, guess))
-			{
-				guess++;
-			}
-			return guess;
+			return GetChromaticNumber(graph);
 		}
 
-		private static bool IsChromaticNumber(IEnumerable<Vertex> graph, int guess)
+
+
+
+		/// <summary>
+		/// DSatur graph coloring algorithm.
+		/// Let the "degree of saturation" of a vertex be the number of different colors being used by its neighbors.
+		/// The algorithm operates as follows:
+		///		1) Let v be the uncolored vertex in the graph with the highest degree of saturation. 
+		///		   In cases of ties, choose the vertex among the uncolored vertices with the largest degree (LineSegmentCount).
+		///		2) Assign v to the lowest color label not being used by any of its neighbors.
+		///		3) If all vertices have been colored, then end; otherwise return to Step 1.
+		///		
+		/// As a result of step 1), vertices seen to be the most "constrained" are colored first.
+		/// 
+		/// </summary>
+		/// <param name="graph">The graph of vertices.</param>
+		/// <returns>The chromatic number of the graph.</returns>
+		private static int GetChromaticNumber(IEnumerable<Vertex> graph)
 		{
 			foreach (Vertex blankMe in graph)
 			{
 				blankMe.SetColor(Brushes.Black);
 			}
 
-			Brush[] palette = ColorPalette.PrimaryColors.Take(guess).ToArray();
+			Stack<Brush> unusedColors = new Stack<Brush>(ColorPalette.PrimaryColors.AsEnumerable().Reverse());
+			List<Brush> usedColors = new List<Brush>() { unusedColors.Pop() };
 
-			bool result = true;
-			foreach (Vertex newVertex in graph)
+			int colorCount = 1;
+			while (true)
 			{
-				if (!result)
+				Vertex nextVertex = GetUncoloredVertexWithHighestSaturation(graph);
+				if (nextVertex == null)
 				{
 					break;
 				}
-				if (newVertex.Color == Brushes.Black)
-				{
-					bool canColor = false;
-					int testColorIndex = 0;
-					while (testColorIndex < guess)
-					{
-						Brush testColor = palette[testColorIndex];
 
-						if (CanColor(newVertex, testColor))
+				bool success = false;
+				while (nextVertex.Color == Brushes.Black)
+				{
+					foreach (Brush testColor in usedColors)
+					{
+						if (CanColor(nextVertex, testColor))
 						{
-							newVertex.SetColor(testColor);
-							canColor = true;
+							nextVertex.SetColor(testColor);
+							success = true;
 							break;
 						}
-
-						testColorIndex++;
 					}
-					result &= canColor;
-				}
-				else
-				{
-					result &= CanColor(newVertex, newVertex.Color);
+
+					if (success)
+					{
+						break;
+					}
+
+					usedColors.Add(unusedColors.Pop());
+					colorCount++;
 				}
 			}
-			return result;
+
+			return colorCount;
 		}
 
+		/// <summary>
+		/// Get the uncolored vertex in the supplied graph with the highest degree of saturation.
+		/// That is: Order by number of different colors being used by its neighbors, highest to lowest (descending).
+		/// In cases of ties, choose the vertex among the uncolored vertices with the largest degree (LineSegments), descending.
+		/// Return the vertex on the top.
+		/// </summary>
+		/// <param name="graph">The graph to choose from.</param>
+		/// <returns>The next uncolored vertex to color, or null if there is none.</returns>
+		private static Vertex GetUncoloredVertexWithHighestSaturation(IEnumerable<Vertex> graph)
+		{
+			// Return the uncolored vertex in the supplied graph [...]
+			List<Vertex> uncoloredVertices = graph.Where(vertex => vertex.Color == Brushes.Black).ToList();
+
+			List<Vertex> orderedVertices = uncoloredVertices
+											.OrderByDescending
+											// ... with the highest degree of saturation.
+											(vertex =>
+												// The count of distinct colors of ConnectedVertices that have color (not black).
+												vertex.ConnectedVertices
+														.Select(neighbor => neighbor.Color)
+														.Where(color => color != Brushes.Black)
+														.Distinct()
+														.Count()
+											)
+											// In cases of ties, choose the vertex with the largest degree.
+											.ThenByDescending(vert => vert.LineSegmentCount)
+											// Finally, use lexicographic ordering (lowest first),
+											//		to break any ties and make the ordering deterministic.
+											.ThenBy(v => v.Name)
+											.ToList();
+
+			if (orderedVertices.Any())
+			{
+				return orderedVertices.First();
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Can the vertex be assigned this color during graph coloring?
+		/// This move is legal (return true) if none of its connected vertices have that color.
+		/// </summary>
+		/// <param name="testVertex">Vertex to check.</param>
+		/// <param name="testColor">Color to check for.</param>
+		/// <returns>True if none of the specified vertex's connected vertices are the test color.</returns>
 		private static bool CanColor(Vertex testVertex, Brush testColor)
 		{
-			var neighbors = testVertex.ConnectedVertices.Select(v => v.Color).Distinct();
-
-			return !neighbors.Contains(testColor);
+			return !testVertex.ConnectedVertices
+								.Select(v => v.Color)
+								.Contains(testColor);
 		}
+
+
+
+
+
+
 
 		/// <summary>
 		/// Creates a simple circular <see cref="GameLevel"/> instance from an enumeration of vertices
@@ -333,12 +428,12 @@ namespace Untangle.ViewModels
 		/// <param name="generatedVertices">An enumeration of vertices generated by the game level
 		/// generator.</param>
 		/// <returns>The created game level instance.</returns>
-		public static GameLevel Create(Size gameboardSize, IEnumerable<Generation.Vertex> generatedVertices)
+		public static GameLevel Create(System.Windows.Size gameboardSize, IEnumerable<Generation.Vertex> generatedVertices)
 		{
 			return Internal_Create(gameboardSize, generatedVertices);
 		}
 
-		private static GameLevel Internal_Create(Size? gameboardSize, IEnumerable<Generation.Vertex> generatedVertices)
+		private static GameLevel Internal_Create(System.Windows.Size? gameboardSize, IEnumerable<Generation.Vertex> generatedVertices)
 		{
 			var vertexMappings = new Dictionary<Generation.Vertex, Vertex>();
 			var lineSegments = new List<LineSegment>();
@@ -405,19 +500,13 @@ namespace Untangle.ViewModels
 		{
 			IsEditing = false;
 
-			_moveCount = 0;
-			_draggedVertex = null;
-			_dragStartPosition = new Point();
-			_dragEndPosition = new Point();
-			MoveHistory = new List<HistoricalMove>();
-			ClearJoinOperation();
+			ClearAllTempVars();
 
 			GameGraph = new Graph(GameGraph.Vertices, GameGraph.LineSegments);
-
 			GameGraph.CalculateAllIntersections();
 		}
 
-		public void Edit_RandomizeVertices(Size size)
+		public void Edit_RandomizeVertices(System.Windows.Size size)
 		{
 			GraphLayout.SelectRandomLayout(GameGraph, size);
 		}

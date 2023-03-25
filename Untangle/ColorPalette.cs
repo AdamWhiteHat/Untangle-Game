@@ -33,8 +33,10 @@ namespace Untangle
 			new SolidColorBrush(Colors.Blue),
 			new SolidColorBrush(Colors.Gold),
 			new SolidColorBrush(Colors.Magenta),
-			new SolidColorBrush(Colors.Tan),
-			new SolidColorBrush(Colors.Brown)
+			new SolidColorBrush(Colors.Cyan),
+			new SolidColorBrush(Colors.Brown),
+			new SolidColorBrush(Colors.Orange),
+			new SolidColorBrush(Colors.Tan)
 		};
 	}
 }

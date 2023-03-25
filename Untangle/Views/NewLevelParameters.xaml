@@ -8,6 +8,32 @@
         mc:Ignorable="d"
         Title="New Level Parameters" MinHeight="250" Height="250" Width="275"        
         >
+
+    <Window.Resources>
+
+        <Style x:Key="errorTooltip" TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip" 
+                            Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors)[0].ErrorContent}"
+                    />
+                </Trigger>
+            </Style.Triggers>            
+        </Style>
+
+        <ControlTemplate x:Key="errorTemplate">
+            <DockPanel>
+                <Border BorderBrush="Red" BorderThickness="1">
+                    <AdornedElementPlaceholder  />
+                </Border>
+                <TextBlock Text="⚠️" Foreground="Red" FontSize="15"
+                           ToolTip="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=(Validation.Errors)[0].ErrorContent}"
+                />
+            </DockPanel>
+        </ControlTemplate>
+
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -23,25 +49,39 @@
                 <WrapPanel HorizontalAlignment="Stretch">
                     <Label Content="# Rows:" Margin="3" Width="80" HorizontalContentAlignment="Right" />
                     <TextBox x:Name="tbRows" Margin="3,3,10,3" Width="150" HorizontalAlignment="Left"
-                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput" />
+                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput"
+                             Style="{StaticResource errorTooltip}"
+                             Validation.ErrorTemplate="{StaticResource errorTemplate}"
+                              
+                             />
                 </WrapPanel>
 
                 <WrapPanel HorizontalAlignment="Stretch">
                     <Label Content="# Columns:" Margin="3" Width="80" HorizontalContentAlignment="Right" />
                     <TextBox x:Name="tbColumns" Margin="3" Width="150" HorizontalAlignment="Left"
-                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput" />
+                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput"
+                             Style="{StaticResource errorTooltip}"
+                             Validation.ErrorTemplate="{StaticResource errorTemplate}" 
+                             />
                 </WrapPanel>
 
                 <WrapPanel HorizontalAlignment="Stretch">
                     <Label Content="Min Edges:" Margin="3" Width="80" HorizontalContentAlignment="Right" />
                     <TextBox x:Name="tbMinEdges" Margin="3" Width="150" HorizontalAlignment="Left"
-                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput"     />
+                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput"
+                             Style="{StaticResource errorTooltip}"                              
+                             Validation.ErrorTemplate="{StaticResource errorTemplate}"   
+                             />
                 </WrapPanel>
 
                 <WrapPanel HorizontalAlignment="Stretch" Style="{Binding ElementName=comboLayout, Mode=OneWay}">
                     <Label Content="Max Edges:" Margin="3" Width="80" HorizontalContentAlignment="Right" />
                     <TextBox x:Name="tbMaxEdges" Margin="3" Width="150" HorizontalAlignment="Left" 
-                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput"    />
+                             InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput" 
+                             Style="{StaticResource errorTooltip}" 
+                             Validation.ErrorTemplate="{StaticResource errorTemplate}"  
+                             
+                             />
                 </WrapPanel>
 
             </StackPanel>

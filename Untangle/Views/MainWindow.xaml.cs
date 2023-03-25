@@ -550,7 +550,7 @@ namespace Untangle
 
 		private void ColorGraph_Click(object sender, RoutedEventArgs e)
 		{
-			int chromaticNumber = GameLevel.ColorGraph(_viewModel.Game.Level.GameGraph.Vertices);
+			int chromaticNumber = GameLevel.ColorTheGraph(_viewModel.Game.Level.GameGraph.Vertices);
 			MessageBox.Show($"The graph's chromatic number is: {chromaticNumber}", "Chromatic Number", MessageBoxButton.OK);
 		}
 

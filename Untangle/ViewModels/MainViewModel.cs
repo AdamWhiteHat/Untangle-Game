@@ -156,10 +156,11 @@ namespace Untangle.ViewModels
 		/// </summary>
 		public MainViewModel()
 		{
-			_languageManager = new LanguageManager();
-			Game = new Game(1);
+			_isEditing = false;
 			_needSaveGamePrompt = false;
-			IsEditing = false;
+			_languageManager = new LanguageManager();
+
+			Game = new Game(1);
 
 			_languageManager.PropertyChanged += LanguageManager_PropertyChanged;
 		}
@@ -206,8 +207,6 @@ namespace Untangle.ViewModels
 				return;
 			}
 
-
-
 			_gameBoardSize = gameBoardSize;
 
 			NewLevelParameters newLevelParametersWindows = new NewLevelParameters(1 + Game.LevelNumber, 2 + Game.LevelNumber, 2, 4);
@@ -247,7 +246,7 @@ namespace Untangle.ViewModels
 		/// </remarks>
 		public bool LoadGame(string fileName)
 		{
-			ExitLevelEditor();
+			Game.Level.ExitEditMode();
 
 			if (!ConfirmQuit())
 			{
@@ -291,7 +290,7 @@ namespace Untangle.ViewModels
 		{
 			try
 			{
-				ExitLevelEditor();
+				Game.Level.ExitEditMode();
 
 				if (SaveHelper.SaveGame(Game, fileName))
 				{
@@ -322,22 +321,10 @@ namespace Untangle.ViewModels
 				{
 					return;
 				}
-
-				Game.Level.EnterEditMode();
 				IsEditing = true;
+				Game.Level.EnterEditMode();
 			}
 			else
-			{
-				ExitLevelEditor();
-			}
-		}
-
-		/// <summary>
-		/// Exits the level editor.
-		/// </summary>
-		private void ExitLevelEditor()
-		{
-			if (IsEditing)
 			{
 				IsEditing = false;
 				Game.Level.ExitEditMode();
