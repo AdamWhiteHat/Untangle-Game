@@ -64,8 +64,8 @@ namespace Untangle
 		}
 
 		private static MainViewModel _viewModel;
-		private static string EnterLevelBuilder_MenuText = "Enter Level Editor";
-		private static string ExitLevelBuilder_MenuText = "Exit Level Editor";
+		private static readonly string EnterLevelBuilder_MenuText = "Enter Level Editor";
+		private static readonly string ExitLevelBuilder_MenuText = "Exit Level Editor";
 
 		/// <summary>
 		/// Initializes a new <see cref="MainWindow" /> instance and obtains its view model from the
@@ -370,7 +370,7 @@ namespace Untangle
 			var vertex = ellipse.DataContext as Core.Vertex;
 			if (vertex != null)
 			{
-				ViewModel.HandleVertexMouseLeave(vertex);
+				ViewModel.HandleVertexMouseLeave();
 			}
 		}
 

@@ -122,10 +122,6 @@ namespace Untangle.Core
 		}
 		private decimal _scaleZoom = 1.00m;
 
-		public List<HistoricalMove> MoveHistory { get; private set; } = new List<HistoricalMove>();
-		public Stack<HistoricalMove> UndoStack;
-		public Stack<HistoricalMove> RedoStack;
-
 		#endregion
 
 		/// <summary>
@@ -139,9 +135,6 @@ namespace Untangle.Core
 			Game = new Game(1);
 
 			_languageManager.PropertyChanged += LanguageManager_PropertyChanged;
-			MoveHistory = new List<HistoricalMove>();
-			UndoStack = new Stack<HistoricalMove>();
-			RedoStack = new Stack<HistoricalMove>();
 		}
 
 		public void SetBoardSize(Size size)
@@ -423,7 +416,7 @@ namespace Untangle.Core
 		/// Handles the event of the mouse cursor leaving the area of a vertex on the game field.
 		/// </summary>
 		/// <param name="vertex">The vertex whose area has been left by the mouse cursor.</param>
-		public void HandleVertexMouseLeave(Vertex vertex)
+		public void HandleVertexMouseLeave()
 		{
 			Game.Level.SetVertexUnderMouse(null);
 		}
@@ -460,27 +453,6 @@ namespace Untangle.Core
 
 		#region Undo/Redo
 
-		public void AddMoveToHistory(int vertexID, Point from, Point to)
-		{
-			Game.Level.MoveCount += 1;
-			HistoricalMove move = new HistoricalMove(Game.Level.GameGraph.UID, Game.Level.MoveCount, vertexID, from, to);
-
-			if (MoveHistory.Count >= Game.Level.MoveCount)
-			{
-				MoveHistory = MoveHistory.Take(Game.Level.MoveCount - 1).ToList();
-			}
-			MoveHistory.Add(move);
-		}
-
-		public void Undo()
-		{
-
-		}
-
-		public void Redo()
-		{
-
-		}
 
 		#endregion
 

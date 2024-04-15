@@ -59,12 +59,18 @@ namespace Untangle.Resources
 			private set
 			{
 				if (_selectedLanguage == value)
+				{
 					return;
+				}
 				if (value == null)
+				{
 					throw new ArgumentNullException("value");
+				}
 
 				if (_selectedLanguage != null)
+				{
 					_selectedLanguage.IsSelected = false;
+				}
 				_selectedLanguage = value;
 				_selectedLanguage.IsSelected = true;
 
@@ -84,9 +90,7 @@ namespace Untangle.Resources
 		public LanguageManager()
 		{
 			LocalizeDictionary.Instance.SetCurrentThreadCulture = true;
-
 			_languages = LoadAvailableLanguages();
-
 			LoadLanguageSettings();
 		}
 
@@ -100,7 +104,9 @@ namespace Untangle.Resources
 		{
 			LanguageItem language = FindLanguage(cultureName);
 			if (language != null)
+			{
 				SelectedLanguage = language;
+			}
 		}
 
 		/// <summary>
@@ -113,7 +119,7 @@ namespace Untangle.Resources
 		/// is always supported, as its resources are embedded in the main assembly of the
 		/// application.</para>
 		/// </remarks>
-		private ReadOnlyCollection<LanguageItem> LoadAvailableLanguages()
+		private static ReadOnlyCollection<LanguageItem> LoadAvailableLanguages()
 		{
 			var languageCultures = new List<CultureInfo>();
 
@@ -127,10 +133,7 @@ namespace Untangle.Resources
 				string resourceFileName = string.Format("{0}.resources.dll", Path.GetFileNameWithoutExtension(executable));
 
 				// Enumerate potential resource directories
-				IEnumerable<string> localizationDirectories = Directory.EnumerateDirectories(
-					Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
-					"??-??",
-					SearchOption.TopDirectoryOnly);
+				IEnumerable<string> localizationDirectories = Directory.EnumerateDirectories(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "??-??", SearchOption.TopDirectoryOnly);
 				foreach (string localizationDirectory in localizationDirectories)
 				{
 					if (File.Exists(Path.Combine(localizationDirectory, resourceFileName)))
@@ -154,10 +157,7 @@ namespace Untangle.Resources
 				// reason, silence the exception and continue without languages
 			}
 
-			return new ReadOnlyCollection<LanguageItem>(
-				languageCultures
-					.Select(ci => new LanguageItem(ci))
-					.ToList());
+			return new ReadOnlyCollection<LanguageItem>(languageCultures.Select(ci => new LanguageItem(ci)).ToList());
 		}
 
 		/// <summary>
@@ -215,14 +215,14 @@ namespace Untangle.Resources
 			// already exists
 			RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(Constants.RegistryKeyName);
 			if (registryKey == null)
+			{
 				return;
+			}
 
 			using (registryKey)
 			{
 				// Store the selected language's culture name
-				registryKey.SetValue(
-					Constants.LanguageValueName,
-					SelectedLanguage.Culture.Name);
+				registryKey.SetValue(Constants.LanguageValueName, SelectedLanguage.Culture.Name);
 			}
 		}
 

@@ -546,7 +546,7 @@ namespace Untangle.Core
 					}
 				}
 			}
-		}		
+		}
 
 		#endregion
 
@@ -618,7 +618,7 @@ namespace Untangle.Core
 			{
 				Point intersection = CalculationHelper.GetIntersectionPoint(currentSegment.Point1, currentSegment.Point2, intersecting.Point1, intersecting.Point2);
 
-				if (intersection.X == double.NaN)
+				if (double.IsNaN(intersection.X))
 				{
 					continue;
 				}
@@ -810,7 +810,7 @@ namespace Untangle.Core
 
 		public void AddMoveToHistory(int vertexID, Point from, Point to)
 		{
-			MoveCount = MoveCount + 1;
+			MoveCount++;
 			HistoricalMove move = new HistoricalMove(GameGraph.UID, MoveCount, vertexID, from, to);
 
 			if (MoveHistory.Count >= MoveCount)
@@ -848,17 +848,17 @@ namespace Untangle.Core
 
 		private void GameGraph_VerticesCollectionChanged(object sender, EventArgs e)
 		{
-			RaisePropertyChanged("GameObjects");
+			RaisePropertyChanged(nameof(GameObjects));
 		}
 
 		private void GameGraph_LineSegmentsCollectionChanged(object sender, EventArgs e)
 		{
-			RaisePropertyChanged("GameObjects");
+			RaisePropertyChanged(nameof(GameObjects));
 		}
 
 		private void GameGraph_IntersectionCollectionChanged(object sender, EventArgs e)
 		{
-			RaisePropertyChanged("GameObjects");
+			RaisePropertyChanged(nameof(GameObjects));
 			GameSolvedCheck();
 		}
 

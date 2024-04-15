@@ -221,7 +221,7 @@ namespace Untangle.Saves
 		private static string GetStringHash(string text)
 		{
 			byte[] savedGameBytes = Encoding.UTF8.GetBytes(text);
-			using (var sha = new SHA256Managed())
+			using (SHA256 sha = SHA256.Create())
 			{
 				byte[] hash = sha.ComputeHash(savedGameBytes);
 				return Convert.ToBase64String(hash, Base64FormattingOptions.None);
