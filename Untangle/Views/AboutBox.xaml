@@ -14,16 +14,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
         xmlns:v="clr-namespace:Untangle"
-        Title="{lex:Loc}"
+        Title="{lex:Loc tb_Title_Text}"
         Height="330"
         Width="440"
         WindowStyle="SingleBorderWindow"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Icon="Resources\Untangle.ico"
+        Icon="..\Resources\Untangle.ico"
         lex:ResxLocalizationProvider.DefaultAssembly="Untangle"
-        lex:ResxLocalizationProvider.DefaultDictionary="Resources.AboutBox">
+        lex:ResxLocalizationProvider.DefaultDictionary="Resources.AboutBox" SizeToContent="Height">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -40,13 +39,13 @@
                    Grid.Row="0"
                    FontSize="18"
                    FontWeight="Bold"
-                   Text="{lex:Loc}" />
+                   Text="{lex:Loc tb_Title_Text}" />
         <StackPanel Grid.Row="1"
                     Margin="5,0,0,0"
                     Orientation="Horizontal">
             <TextBlock x:Name="tb_VersionCaption"
                        FontStyle="Italic"
-                       Text="{lex:Loc}" />
+                       Text="{lex:Loc tb_VersionCaption_Text}" />
             <TextBlock x:Name="tb_Version"
                        Margin="5,0,0,0"
                        FontStyle="Italic"

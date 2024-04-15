@@ -26,9 +26,11 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Untangle.Generation;
-using Untangle.ViewModels;
+using Untangle.Core;
 using XAMLMarkupExtensions.Base;
-using Vertex = Untangle.ViewModels.Vertex;
+using Vertex = Untangle.Core.Vertex;
+using System.Windows.Forms.PropertyGridInternal;
+using System.Windows.Data;
 
 namespace Untangle
 {
@@ -37,6 +39,22 @@ namespace Untangle
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		/// <summary>
+		/// A command for changing the selected language of the application.
+		/// </summary>
+		public static ICommand LanguageCommand = new RoutedCommand();
+
+		/// <summary>
+		/// A command for displaying the About box of the application.
+		/// </summary>
+		public static ICommand AboutCommand = new RoutedCommand();
+
+
+
+
+
+
+
 		/// <summary>
 		/// The main window's view model instance.
 		/// </summary>
@@ -65,50 +83,26 @@ namespace Untangle
 
 			ic_GameField.SizeChanged += Ic_GameField_SizeChanged;
 			this.Loaded += MainWindow_Loaded;
-			_viewModel.PropertyChanged += _viewModel_PropertyChanged;
-
 
 			ic_GameField.ClipToBounds = true;
 			ic_GameField.UseLayoutRounding = true;
 		}
 
-		private void _viewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			if (e.PropertyName == "IsEditing")
-			{
-				if (_viewModel.IsEditing)
-				{
-					mi_LevelBuilder.Header = ExitLevelBuilder_MenuText;
-					borderGameField.BorderBrush = Brushes.Red;
-					levelEditorInstructions.Visibility = Visibility.Visible;
-					mi_RandomizeVertices.Visibility = Visibility.Visible;
-				}
-				else
-				{
-					mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
-					borderGameField.BorderBrush = Brushes.Transparent;
-					levelEditorInstructions.Visibility = Visibility.Hidden;
-					mi_RandomizeVertices.Visibility = Visibility.Collapsed;
-				}
-			}
-		}
-
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			_viewModel.SetBoardSize(ic_GameField.RenderSize);
-			_viewModel.InitialGame();
+			ViewModel.SetBoardSize(ic_GameField.RenderSize);
+			ViewModel.InitialGame();
 		}
 
 		private void SetTitle(string title)
 		{
 			string newTitle = $"Untangled - {title}";
 			this.Title = newTitle;
-			//labelTitle.Content = newTitle;
 		}
 
 		private void Ic_GameField_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			_viewModel.SetBoardSize(ic_GameField.RenderSize);
+			ViewModel.SetBoardSize(ic_GameField.RenderSize);
 		}
 
 		public Vertex GetVertexFromId(int vertexId)
@@ -121,11 +115,6 @@ namespace Untangle
 			}
 
 			Vertex result = match.DataContext as Vertex;
-			if (result == null)
-			{
-				throw new KeyNotFoundException();
-			}
-
 			return result;
 		}
 
@@ -181,7 +170,8 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void NewGameCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			_viewModel.NewGame(ic_GameField.RenderSize);
+			ViewModel.NewGame(ic_GameField.RenderSize);
+			UpdateDebugOutput();
 		}
 
 		/// <summary>
@@ -198,10 +188,12 @@ namespace Untangle
 				return;
 			}
 
-			if (_viewModel.SaveGame(fileName, true))
+			if (ViewModel.SaveGame(fileName, true))
 			{
 				SetTitle($"\"{fileName}\"");
 			}
+
+			UpdateDebugOutput();
 		}
 
 		/// <summary>
@@ -218,10 +210,12 @@ namespace Untangle
 				return;
 			}
 
-			if (_viewModel.LoadGame(fileName))
+			if (ViewModel.LoadGame(fileName))
 			{
 				SetTitle($"\"{fileName}\"");
 			}
+
+			UpdateDebugOutput();
 		}
 
 		/// <summary>
@@ -247,6 +241,11 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void ExitCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
+			if (ViewModel.IsEditing)
+			{
+				ViewModel.ToggleLevelEditor();
+			}
+
 			Close();
 		}
 
@@ -257,7 +256,7 @@ namespace Untangle
 		/// <param name="e">The <see cref="CancelEventArgs"/>  containing the event arguments.</param>
 		private void Window_Closing(object sender, CancelEventArgs e)
 		{
-			e.Cancel = !_viewModel.ConfirmQuit();
+			e.Cancel = !ViewModel.ConfirmQuit();
 		}
 
 		/// <summary>
@@ -268,7 +267,7 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void LanguageCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			_viewModel.LanguageManager.SelectLanguage((string)e.Parameter);
+			ViewModel.LanguageManager.SelectLanguage((string)e.Parameter);
 		}
 
 		#endregion
@@ -284,13 +283,22 @@ namespace Untangle
 		private void Vertex_MouseDown(object sender, MouseButtonEventArgs e)
 		{
 			var ellipse = (Ellipse)sender;
-			var vertex = ellipse.DataContext as ViewModels.Vertex;
+			var vertex = ellipse.DataContext as Core.Vertex;
 
 			if (vertex != null)
 			{
-				if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
+				ModifierKeys keyModifier = Keyboard.Modifiers;
+
+				if (e.ChangedButton == MouseButton.Left && keyModifier.HasFlag(ModifierKeys.Control) && keyModifier.HasFlag(ModifierKeys.Shift))
 				{
-					_viewModel.HandleVertexMouseDown(vertex, e.ChangedButton, Keyboard.Modifiers);
+					if (!vertex.AtStartPosition)
+					{
+						SendVertexToStartingPosition(vertex);
+					}
+				}
+				else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
+				{
+					ViewModel.HandleVertexMouseDown(vertex, e.ChangedButton, keyModifier);
 				}
 				else if (e.ChangedButton == MouseButton.Middle)
 				{
@@ -309,7 +317,7 @@ namespace Untangle
 		{
 			Point position = e.GetPosition(ic_GameField);
 			position.Offset(-ic_GameField.ActualWidth * 0.5, -ic_GameField.ActualHeight * 0.5);
-			_viewModel.HandleMouseMove(position, (e.LeftButton == MouseButtonState.Pressed));
+			ViewModel.HandleMouseMove(position, (e.LeftButton == MouseButtonState.Pressed));
 		}
 
 		/// <summary>
@@ -330,7 +338,7 @@ namespace Untangle
 					keyModifier = true;
 				}
 
-				_viewModel.HandleMouseUp(position, keyModifier);
+				ViewModel.HandleMouseUp(position, keyModifier);
 			}
 		}
 
@@ -343,10 +351,10 @@ namespace Untangle
 		private void Vertex_MouseEnter(object sender, MouseEventArgs e)
 		{
 			var ellipse = (Ellipse)sender;
-			var vertex = ellipse.DataContext as ViewModels.Vertex;
+			var vertex = ellipse.DataContext as Core.Vertex;
 			if (vertex != null)
 			{
-				_viewModel.HandleVertexMouseEnter(vertex);
+				ViewModel.HandleVertexMouseEnter(vertex);
 			}
 		}
 
@@ -359,10 +367,10 @@ namespace Untangle
 		private void Vertex_MouseLeave(object sender, MouseEventArgs e)
 		{
 			var ellipse = (Ellipse)sender;
-			var vertex = ellipse.DataContext as ViewModels.Vertex;
+			var vertex = ellipse.DataContext as Core.Vertex;
 			if (vertex != null)
 			{
-				_viewModel.HandleVertexMouseLeave(vertex);
+				ViewModel.HandleVertexMouseLeave(vertex);
 			}
 		}
 
@@ -382,11 +390,11 @@ namespace Untangle
 				int sign = Math.Sign(value);
 				if (sign == -1)
 				{
-					_viewModel.ScaleZoom -= scaledValue;
+					ViewModel.ScaleZoom -= scaledValue;
 				}
 				else if (sign == 1)
 				{
-					_viewModel.ScaleZoom += scaledValue;
+					ViewModel.ScaleZoom += scaledValue;
 				}
 			}
 		}
@@ -414,7 +422,7 @@ namespace Untangle
 			{
 				if (e.SystemKey == Key.Enter)
 				{
-					_viewModel.Game.Level.ShrinkLongestEdge();
+					ViewModel.Game.Level.ShrinkLongestEdge();
 				}
 			}
 		}
@@ -430,55 +438,26 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void UndoCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
+			e.Handled = true;
 
-			HistoricalMove doMove = _viewModel.Game.Level.MoveHistory.ElementAtOrDefault(_viewModel.Game.Level.MoveCount - 1);
+			HistoricalMove doMove = ViewModel.Game.Level.MoveHistory.ElementAtOrDefault(ViewModel.Game.Level.MoveCount - 1);
 			if (doMove == null)
 			{
 				return;
 			}
 
-			IEnumerable<Ellipse> ellipses = WPFHelper.ChildrenOfType<Ellipse>(ic_GameField);
-			Ellipse match = ellipses.Where(e => ((Vertex)(e.DataContext)).Id == doMove.VertexId).FirstOrDefault();
-			if (match == default(Ellipse))
+			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
+			if (matchingVertex == null)
 			{
 				return;
 			}
 
-			e.Handled = true;
-
-			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
-
 			Point fromPoint = doMove.ToPosition;
 			Point toPoint = doMove.FromPosition;
 
-			DoubleAnimation xAnimation = new DoubleAnimation(fromPoint.X, toPoint.X,
-				ViewModelBase.Animation_Duration, FillBehavior.Stop)
-			{ EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
-			DoubleAnimation yAnimation = new DoubleAnimation(fromPoint.Y, toPoint.Y,
-				ViewModelBase.Animation_Duration, FillBehavior.Stop)
-			{ EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
+			ViewModel.Game.Level.MoveCount -= 1;
 
-			yAnimation.Completed += (s, e) =>
-			{
-				using (var d = Dispatcher.DisableProcessing())
-				{
-					this.Dispatcher.BeginInvoke(new Action(
-					() =>
-						{
-							matchingVertex.SetValueSync(Vertex.XProperty, toPoint.X);
-							matchingVertex.SetValueSync(Vertex.YProperty, toPoint.Y);
-
-							_viewModel.Game.Level.MoveCount -= 1;
-
-							_viewModel.Game.Level.GameGraph.RecalculateIntersections(matchingVertex);
-							_viewModel.Game.Level.GameSolvedCheck();
-						}
-					), DispatcherPriority.Render);
-				}
-			};
-
-			matchingVertex.BeginAnimation(Vertex.XProperty, xAnimation);
-			matchingVertex.BeginAnimation(Vertex.YProperty, yAnimation);
+			AnimateVertexMovement(matchingVertex, fromPoint, toPoint);
 		}
 
 		/// <summary>
@@ -488,50 +467,83 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void RedoCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			HistoricalMove doMove = _viewModel.Game.Level.MoveHistory.ElementAtOrDefault(_viewModel.Game.Level.MoveCount);
+			e.Handled = true;
+
+			HistoricalMove doMove = ViewModel.Game.Level.MoveHistory.ElementAtOrDefault(ViewModel.Game.Level.MoveCount + 1);
 			if (doMove == null)
 			{
 				return;
 			}
 
-			IEnumerable<Ellipse> ellipses = WPFHelper.ChildrenOfType<Ellipse>(ic_GameField);
-			Ellipse match = ellipses.Where(e => ((Vertex)(e.DataContext)).Id == doMove.VertexId).FirstOrDefault();
-			if (match == default(Ellipse))
+			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
+			if (matchingVertex == null)
 			{
 				return;
 			}
 
-			e.Handled = true;
-
-			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
+			ViewModel.Game.Level.MoveCount += 1;
 
 			Point fromPoint = doMove.FromPosition;
 			Point toPoint = doMove.ToPosition;
 
-			DoubleAnimation xAnimation = new DoubleAnimation(fromPoint.X, toPoint.X, ViewModelBase.Animation_Duration, FillBehavior.Stop) { EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
-			DoubleAnimation yAnimation = new DoubleAnimation(fromPoint.Y, toPoint.Y, ViewModelBase.Animation_Duration, FillBehavior.Stop) { EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
+			AnimateVertexMovement(matchingVertex, fromPoint, toPoint);
+		}
+
+		public void SendVertexToStartingPosition(Vertex vertex)
+		{
+			if (vertex.AtStartPosition)
+			{
+				return;
+			}
+
+			Point fromPoint = vertex.GetPosition();
+			Point toPoint = vertex.StartingPosition.Value;
+			ViewModel.Game.Level.AddMoveToHistory(vertex.Id, fromPoint, toPoint);
+
+			AnimateVertexMovement(vertex, fromPoint, toPoint);
+		}
+
+		private void AnimateVertexMovement(Vertex vertex, Point from, Point to)
+		{
+			DoubleAnimation xAnimation = new DoubleAnimation(from.X, to.X, ViewModelBase.Animation_Duration, FillBehavior.HoldEnd) { EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
+			DoubleAnimation yAnimation = new DoubleAnimation(from.Y, to.Y, ViewModelBase.Animation_Duration, FillBehavior.HoldEnd) { EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
+
+			xAnimation.Completed += (s, e) =>
+			{
+				//using (var d = Dispatcher.DisableProcessing())
+				//{
+					//this.Dispatcher.BeginInvoke(new Action(() => {
+
+					vertex.SetValue(Vertex.XProperty, to.X);
+					vertex.BeginAnimation(Vertex.XProperty, null);
+
+					_viewModel.Game.Level.GameGraph.RecalculateIntersections(vertex);
+					UpdateDebugOutput();
+					_viewModel.Game.Level.GameSolvedCheck();
+
+					//}), DispatcherPriority.Render);
+				//}
+			};
 
 			yAnimation.Completed += (s, e) =>
 			{
-				using (var d = Dispatcher.DisableProcessing())
-				{
-					this.Dispatcher.BeginInvoke(new Action(
-					() =>
-					{
-						matchingVertex.SetValueSync(Vertex.XProperty, toPoint.X);
-						matchingVertex.SetValueSync(Vertex.YProperty, toPoint.Y);
+				//using (var d = Dispatcher.DisableProcessing())
+				//{
+					//this.Dispatcher.BeginInvoke(new Action(() => {
 
-						_viewModel.Game.Level.MoveCount += 1;
+					vertex.SetValue(Vertex.YProperty, to.Y);
+					vertex.BeginAnimation(Vertex.YProperty, null);
 
-						_viewModel.Game.Level.GameGraph.RecalculateIntersections(matchingVertex);
-						_viewModel.Game.Level.GameSolvedCheck();
-					}
-					), DispatcherPriority.Render);
-				}
+					_viewModel.Game.Level.GameGraph.RecalculateIntersections(vertex);
+					UpdateDebugOutput();
+					_viewModel.Game.Level.GameSolvedCheck();
+
+					//}), DispatcherPriority.Render);
+				//}
 			};
 
-			matchingVertex.BeginAnimation(Vertex.XProperty, xAnimation);
-			matchingVertex.BeginAnimation(Vertex.YProperty, yAnimation);
+			vertex.BeginAnimation(Vertex.XProperty, xAnimation);
+			vertex.BeginAnimation(Vertex.YProperty, yAnimation);
 		}
 
 		#endregion
@@ -543,20 +555,35 @@ namespace Untangle
 		/// </summary>
 		private void MenuCommand_LevelBuilder_Click(object sender, RoutedEventArgs e)
 		{
-			_viewModel.ToggleLevelEditor();
+			ViewModel.ToggleLevelEditor();
+
+			if (ViewModel.IsEditing)
+			{
+				mi_LevelBuilder.Header = ExitLevelBuilder_MenuText;
+				borderGameField.BorderBrush = Brushes.Red;
+				levelEditorInstructions.Visibility = Visibility.Visible;
+				mi_RandomizeVertices.Visibility = Visibility.Visible;
+			}
+			else
+			{
+				mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
+				borderGameField.SetResourceReference(Border.BorderBrushProperty, "windowBorderColor");
+				levelEditorInstructions.Visibility = Visibility.Hidden;
+				mi_RandomizeVertices.Visibility = Visibility.Collapsed;
+			}
 		}
 
 		#region Color Vertices
 
 		private void ColorGraph_Click(object sender, RoutedEventArgs e)
 		{
-			int chromaticNumber = GameLevel.ColorTheGraph(_viewModel.Game.Level.GameGraph.Vertices);
+			int chromaticNumber = GameLevel.GetChromaticNumber(ViewModel.Game.Level.GameGraph.Vertices);
 			MessageBox.Show($"The graph's chromatic number is: {chromaticNumber}", "Chromatic Number", MessageBoxButton.OK);
 		}
 
 		private void mi_ColorByStartPositions_Click(object sender, RoutedEventArgs e)
 		{
-			_viewModel.Game.Level.MarkVerticesInStartPosition();
+			ViewModel.Game.Level.MarkVerticesInStartPosition();
 		}
 
 		#endregion
@@ -565,20 +592,24 @@ namespace Untangle
 
 		private void mi_AutoSolve_Click(object sender, RoutedEventArgs e)
 		{
-			_viewModel.AutoSolve();
+			ViewModel.AutoSolve();
+			UpdateDebugOutput();
 		}
 
-		private void mi_AttemptMoveVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
+		private void mi_SendVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
 		{
-			_viewModel.Game.Level.ResetVerticesToStartPosition();
+			foreach (Vertex vertex in ViewModel.Game.Level.GameGraph.Vertices)
+			{
+				SendVertexToStartingPosition(vertex);
+			}
+			UpdateDebugOutput();
 		}
 
 		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
 		{
-			_viewModel.Game.Level.Edit_RandomizeVertices(ic_GameField.RenderSize);
+			ViewModel.Game.Level.Edit_RandomizeVertices(ic_GameField.RenderSize);
+			UpdateDebugOutput();
 		}
-
-		#endregion
 
 		#endregion
 
@@ -612,24 +643,20 @@ namespace Untangle
 			}
 		}
 
+		#endregion
+
 		#region Debug View
 
 		private void mi_DebugView_Click(object sender, RoutedEventArgs e)
 		{
 			if (mi_DebugView.IsChecked)
 			{
-				_viewModel.Game.Level.GameGraph.VertexCollectionChanged += UpdateDebugOutput;
-				_viewModel.Game.Level.GameGraph.LineSegmentCollectionChanged += UpdateDebugOutput;
-				_viewModel.Game.Level.GameGraph.IntersectionCollectionChanged += UpdateDebugOutput;
-
+				ViewModel.Game.Level.PlayerMoved += UpdateDebugOutput;
 				UpdateDebugOutput(null, EventArgs.Empty);
 			}
 			else
 			{
-				_viewModel.Game.Level.GameGraph.VertexCollectionChanged -= UpdateDebugOutput;
-				_viewModel.Game.Level.GameGraph.LineSegmentCollectionChanged -= UpdateDebugOutput;
-				_viewModel.Game.Level.GameGraph.IntersectionCollectionChanged -= UpdateDebugOutput;
-
+				ViewModel.Game.Level.PlayerMoved -= UpdateDebugOutput;
 				textBoxDebugInfo.Clear();
 			}
 		}
@@ -641,28 +668,33 @@ namespace Untangle
 
 		private void UpdateDebugOutput()
 		{
-			textBoxDebugInfo.Clear();
-			StringBuilder output = new StringBuilder();
+			if (mi_DebugView.IsChecked)
+			{
+				StringBuilder output = new StringBuilder();
 
-			output.AppendLine("Vertices:");
-			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.Vertices.Select(v => v.ToString())));
+				output.AppendLine();
+				output.AppendLine("Undo/Redo buffer:");
+				output.AppendLine($"Position.Index: {ViewModel.Game.Level.MoveCount - 1}");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.MoveHistory.Select(mv => mv.ToString())));
+				output.AppendLine();
+				output.AppendLine("Vertices:");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Vertices.Select(v => v.ToString())));
+				output.AppendLine();
+				output.AppendLine();
+				output.AppendLine("Line Segments:");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.LineSegments.Select(v => v.ToString())));
+				output.AppendLine();
+				output.AppendLine();
+				output.AppendLine("Intersections:");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Intersections.Select(v => $"{v.Key}:" + Environment.NewLine + "\t" + $"{string.Join(Environment.NewLine + "\t", v.Value.Select(h => h.ToString()))}")));
+				output.AppendLine();
+				output.AppendLine();
+				output.AppendLine("Starting Position(s):");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Vertices.Select(v => $"({v.StartingPosition.Value.X}, {v.StartingPosition.Value.Y})")));
+				output.AppendLine();
 
-			output.AppendLine();
-			output.AppendLine("Line Segments:");
-			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.LineSegments.Select(v => v.ToString())));
-
-			output.AppendLine();
-			output.AppendLine("Intersections:");
-			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.Intersections.Select(v => $"{v.Key}:" + Environment.NewLine + "\t" + $"{string.Join(Environment.NewLine + "\t", v.Value.Select(h => h.ToString()))}")));
-
-			output.AppendLine();
-			output.AppendLine("Starting Position(s):");
-			output.AppendLine(string.Join(Environment.NewLine, _viewModel.Game.Level.GameGraph.Vertices.Select(v => $"({v.StartingPosition.Value.X}, {v.StartingPosition.Value.Y})")));
-
-			output.AppendLine();
-
-			textBoxDebugInfo.SetCurrentValue(TextBox.TextProperty, output.ToString());
-			//textBoxDebugInfo.InvalidateVisual();
+				textBoxDebugInfo.SetCurrentValue(TextBox.TextProperty, output.ToString());
+			}
 		}
 
 		#endregion

@@ -121,7 +121,9 @@
     <value>You just solved level {0} in {1} moves. Congratulations!</value>
   </data>
   <data name="SaveGamePrompt" xml:space="preserve">
-    <value>You have unsaved changes. Are you sure you want to quit? To go back and save your progress, click 'no'.</value>
+    <value>You have unsaved changes. Are you sure you want to quit?
+Choosing 'Yes' will lose your unsaved changes.
+Click 'No' to cancel. Then you can save your progress and try this command again..</value>
   </data>
   <data name="SaveGameSuccess" xml:space="preserve">
     <value>Your game was saved successfully.</value>

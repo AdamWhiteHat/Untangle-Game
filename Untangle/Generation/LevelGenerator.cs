@@ -11,9 +11,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Untangle.ViewModels;
+using Untangle.Core;
 using System.Windows;
-using static Untangle.ViewModels.GameLevel;
+using static Untangle.Core.GameLevel;
 using System.Drawing;
 using Microsoft.Msagl.GraphmapsWithMesh;
 

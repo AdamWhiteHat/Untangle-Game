@@ -13,7 +13,7 @@ using System.Windows;
 using Untangle.Generation;
 using Untangle.Resources;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	/// <summary>
 	/// A view model class for a single game of Untangle.
@@ -33,7 +33,7 @@ namespace Untangle.ViewModels
 					return;
 				}
 				_levelNumber = value;
-				OnPropertyChanged();
+				RaisePropertyChanged();
 			}
 		}
 		private int _levelNumber;
@@ -52,7 +52,7 @@ namespace Untangle.ViewModels
 				}
 
 				_level = value;
-				OnPropertyChanged();
+				RaisePropertyChanged();
 			}
 		}
 		private GameLevel _level;

@@ -16,8 +16,9 @@ using System.ComponentModel;
 using Untangle.Generation;
 using Untangle.Resources;
 using Untangle.Saves;
+using System.Collections.Generic;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	/// <summary>
 	/// A view model class for the main UI of the Untangle game application.
@@ -28,56 +29,28 @@ namespace Untangle.ViewModels
 		#region Properties and Fields
 
 		/// <summary>
-		/// Property name constant for the current game of Untangle loaded in the application.
-		/// </summary>
-		public const string GamePropertyName = "Game";
-
-		/// <summary>
-		/// Property name constant for the application's current title text.
-		/// </summary>
-		public const string TitlePropertyName = "Title";
-
-		/// <summary>
-		/// A command for displaying the About box of the application.
-		/// </summary>
-		public static ICommand AboutCommand = new RoutedCommand();
-
-		/// <summary>
-		/// A command for changing the selected language of the application.
-		/// </summary>
-		public static ICommand LanguageCommand = new RoutedCommand();
-
-		/// <summary>
 		/// Size of the game board. For restricting randomizing vertex positions.
 		/// </summary>
 		internal Size _gameBoardSize = Size.Empty;
 
 		/// <summary>
-		/// Specifies whether a save game prompt should be displayed if the user is about to lose
-		/// his current game progress.
+		/// Indicates if the game state has changed since the last save.
 		/// </summary>
-		/// <remarks>
-		/// <para>The save game prompt is not needed if the user has not dragged any vertices since
-		/// the game was started or last saved.</para>
-		/// </remarks>
-		private bool _needSaveGamePrompt;
-
-		public bool IsEditing
+		public bool IsDirty
 		{
-			get
-			{
-				return _isEditing;
-			}
+			get { return _isDirty; }
 			private set
 			{
-				if (value != _isEditing)
+				if (_isDirty != value)
 				{
-					_isEditing = value;
-					OnPropertyChanged();
+					_isDirty = value;
+					RaisePropertyChanged();
 				}
 			}
 		}
-		private bool _isEditing = false;
+		private bool _isDirty;
+
+		public bool IsEditing { get { return Game.Level.IsEditing; } }
 
 		/// <summary>
 		/// The application's language manager.
@@ -118,8 +91,8 @@ namespace Untangle.ViewModels
 						_game.Level.LevelSolved += Level_LevelSolved; ;
 					}
 				}
-				OnPropertyChanged(GamePropertyName);
-				OnPropertyChanged(TitlePropertyName);
+				RaisePropertyChanged(nameof(MainViewModel.Game));
+				RaisePropertyChanged(nameof(MainViewModel.Title));
 			}
 		}
 		private Game _game;
@@ -143,11 +116,15 @@ namespace Untangle.ViewModels
 				if (_scaleZoom != value)
 				{
 					_scaleZoom = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
 		private decimal _scaleZoom = 1.00m;
+
+		public List<HistoricalMove> MoveHistory { get; private set; } = new List<HistoricalMove>();
+		public Stack<HistoricalMove> UndoStack;
+		public Stack<HistoricalMove> RedoStack;
 
 		#endregion
 
@@ -156,13 +133,15 @@ namespace Untangle.ViewModels
 		/// </summary>
 		public MainViewModel()
 		{
-			_isEditing = false;
-			_needSaveGamePrompt = false;
+			IsDirty = false;
 			_languageManager = new LanguageManager();
 
 			Game = new Game(1);
 
 			_languageManager.PropertyChanged += LanguageManager_PropertyChanged;
+			MoveHistory = new List<HistoricalMove>();
+			UndoStack = new Stack<HistoricalMove>();
+			RedoStack = new Stack<HistoricalMove>();
 		}
 
 		public void SetBoardSize(Size size)
@@ -234,7 +213,7 @@ namespace Untangle.ViewModels
 					GameLevel gameLevel = GameLevel.Create(_gameBoardSize, vertices);
 					Game = new Game(gameLevel, graphIndex);
 				}
-				_needSaveGamePrompt = false;
+				IsDirty = false;
 			}
 		}
 
@@ -246,12 +225,12 @@ namespace Untangle.ViewModels
 		/// </remarks>
 		public bool LoadGame(string fileName)
 		{
-			Game.Level.ExitEditMode();
-
 			if (!ConfirmQuit())
 			{
 				return false;
 			}
+
+			Game.Level.ExitEditMode();
 
 			try
 			{
@@ -268,7 +247,7 @@ namespace Untangle.ViewModels
 					_gameBoardSize = CalculateGameBoardSize();
 				}
 
-				_needSaveGamePrompt = false;
+				IsDirty = false;
 
 				return true;
 			}
@@ -298,7 +277,7 @@ namespace Untangle.ViewModels
 					{
 						MessageBox.Show(Messages.SaveGameSuccess, MessageCaptions.SaveGameSuccess);
 					}
-					_needSaveGamePrompt = false;
+					IsDirty = false;
 					return true;
 				};
 			}
@@ -315,18 +294,16 @@ namespace Untangle.ViewModels
 		/// </summary>
 		public void ToggleLevelEditor()
 		{
-			if (!IsEditing)
+			if (!Game.Level.IsEditing)
 			{
 				if (!ConfirmQuit())
 				{
 					return;
 				}
-				IsEditing = true;
 				Game.Level.EnterEditMode();
 			}
 			else
 			{
-				IsEditing = false;
 				Game.Level.ExitEditMode();
 			}
 		}
@@ -355,25 +332,27 @@ namespace Untangle.ViewModels
 					_gameBoardSize = CalculateGameBoardSize();
 				}
 
-				_needSaveGamePrompt = false;
+				IsDirty = false;
 				Game.LevelNumber++;
 				NewGame(_gameBoardSize);
 			}
 		}
 
 		/// <summary>
-		/// Displays a save game prompt when the user is about to lose his current game progress,
-		/// if needed.
+		/// Displays a save game prompt when the user is about to lose his current game progress, if needed.
 		/// </summary>
-		/// <returns><see langword="true"/> if the user has chosen to proceed with the operation
-		/// after saving his current game or deliberately choosing not to save it.</returns>
+		/// <returns>
+		/// <see langword="true"/> if the current operationa should proceed, possibly losing game state.
+		/// This happens either when there is no unsaved game state (IsDirty flag is false), or the user has indicated they do not care.
+		/// <see langword="true"/> if the current operation should abort, preserving the current game state.
+		/// </returns>
 		/// <remarks>
 		/// <para>The save game prompt is not needed if the user has not dragged any vertices since
 		/// the game was started or last saved.</para>
 		/// </remarks>
 		public bool ConfirmQuit()
 		{
-			if (!_needSaveGamePrompt)
+			if (!IsDirty)
 			{
 				return true;
 			}
@@ -402,13 +381,13 @@ namespace Untangle.ViewModels
 		{
 			if (Game.Level.IsDragging)
 			{
-				_needSaveGamePrompt = true;
 				if (buttonPressed)
 				{
 					Game.Level.ContinueDrag(position);
 				}
 				else
 				{
+					IsDirty = true;
 					Game.Level.FinishDrag();
 				}
 			}
@@ -421,9 +400,10 @@ namespace Untangle.ViewModels
 		{
 			if (Game.Level.IsDragging)
 			{
+				IsDirty = true;
 				Game.Level.FinishDrag();
 			}
-			else if (IsEditing && keyModifier)
+			else if (Game.Level.IsEditing && keyModifier)
 			{
 				Game.Level.Edit_CreateVertex(position);
 			}
@@ -458,13 +438,9 @@ namespace Untangle.ViewModels
 		{
 			if (button == MouseButton.Left)
 			{
-				if (IsEditing && keyModifier == ModifierKeys.Control)
+				if (Game.Level.IsEditing && keyModifier == ModifierKeys.Control)
 				{
 					Game.Level.Edit_JoinVertexSelect(vertex);
-				}
-				else if (keyModifier.HasFlag(ModifierKeys.Control) && keyModifier.HasFlag(ModifierKeys.Shift))
-				{
-					Game.Level.ResetVertexToStartingPosition(vertex);
 				}
 				else
 				{
@@ -473,11 +449,37 @@ namespace Untangle.ViewModels
 			}
 			else if (button == MouseButton.Right)
 			{
-				if (IsEditing && keyModifier == ModifierKeys.Alt)
+				if (Game.Level.IsEditing && keyModifier == ModifierKeys.Alt)
 				{
 					Game.Level.Edit_DeleteVertex(vertex);
 				}
 			}
+		}
+
+		#endregion
+
+		#region Undo/Redo
+
+		public void AddMoveToHistory(int vertexID, Point from, Point to)
+		{
+			Game.Level.MoveCount += 1;
+			HistoricalMove move = new HistoricalMove(Game.Level.GameGraph.UID, Game.Level.MoveCount, vertexID, from, to);
+
+			if (MoveHistory.Count >= Game.Level.MoveCount)
+			{
+				MoveHistory = MoveHistory.Take(Game.Level.MoveCount - 1).ToList();
+			}
+			MoveHistory.Add(move);
+		}
+
+		public void Undo()
+		{
+
+		}
+
+		public void Redo()
+		{
+
 		}
 
 		#endregion
@@ -491,7 +493,7 @@ namespace Untangle.ViewModels
 		/// <param name="sender">The object which raised the event.</param>
 		/// <param name="e">The event's arguments.</param>
 		/// <remarks>
-		/// <para>If the <see cref="ViewModels.LanguageManager.SelectedLanguage"/> property of the
+		/// <para>If the <see cref="Core.LanguageManager.SelectedLanguage"/> property of the
 		/// application's language manager has changed, the application's title should also be
 		/// invalidated.</para>
 		/// </remarks>
@@ -499,7 +501,7 @@ namespace Untangle.ViewModels
 		{
 			if (e.PropertyName == LanguageManager.SelectedLanguagePropertyName)
 			{
-				OnPropertyChanged(TitlePropertyName);
+				RaisePropertyChanged(nameof(MainViewModel.Title));
 			}
 		}
 
@@ -510,7 +512,7 @@ namespace Untangle.ViewModels
 		/// <param name="sender">The object which raised the event.</param>
 		/// <param name="e">The event's arguments.</param>
 		/// <remarks>
-		/// <para>If the <see cref="ViewModels.Game.LevelNumber"/> property of the current game of
+		/// <para>If the <see cref="Core.Game.LevelNumber"/> property of the current game of
 		/// Untangle loaded in the application has changed, the application's title should also be
 		/// invalidated.</para>
 		/// </remarks>
@@ -518,8 +520,9 @@ namespace Untangle.ViewModels
 		{
 			if (e.PropertyName == nameof(Game.LevelNumber))
 			{
-				OnPropertyChanged(TitlePropertyName);
+				RaisePropertyChanged(nameof(MainViewModel.Title));
 			}
+			RaisePropertyChanged(e);
 		}
 
 		#endregion

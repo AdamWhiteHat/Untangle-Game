@@ -16,15 +16,19 @@ using Microsoft.Msagl.Layout.MDS;
 using Microsoft.Msagl.Layout.Incremental;
 using Microsoft.Msagl.Prototype.Ranking;
 using Microsoft.Msagl.Prototype.Phylo;
+using Microsoft.Msagl.Core.Geometry;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	public static class AutoSolver
 	{
-		public static void Solve(Untangle.ViewModels.Graph graph, System.Windows.Size gameBoardSize)
+		public static void Solve(Untangle.Core.Graph graph, System.Windows.Size gameBoardSize)
 		{
 			Dictionary<Vertex, Microsoft.Msagl.Core.Layout.Node> vertexNodeDictionary = new Dictionary<Vertex, Microsoft.Msagl.Core.Layout.Node>();
-			GeometryGraph layoutGraph = new GeometryGraph();
+			GeometryGraph layoutGraph = new GeometryGraph()
+			{
+
+			};
 
 			Microsoft.Msagl.Core.Geometry.Rectangle beforeBounds = layoutGraph.BoundingBox;
 
@@ -71,7 +75,11 @@ namespace Untangle.ViewModels
 				   {
 					   PackingAspectRatio = aspectRatio,
 					   RemoveOverlaps = true,
+					   AdjustScale = true,
+					   PackingMethod = PackingMethod.Compact
 
+					   //EdgeConstraints = new EdgeConstraints() { Direction = Microsoft.Msagl.Core.Geometry.Direction.None, Separation = 23 },
+					   //EdgeRoutingSettings = new EdgeRoutingSettings() { EdgeRoutingMode = EdgeRoutingMode.StraightLine }
 				   },
 				   layoutGraph
 			);

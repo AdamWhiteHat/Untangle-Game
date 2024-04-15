@@ -14,37 +14,37 @@ using System.Windows;
 using System.Windows.Media.Animation;
 //using System.Runtime.CompilerServices;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	/// <summary>
 	/// A base class for all view model classes, implementing <see cref="INotifyPropertyChanged"/>.
 	/// </summary>
 	public abstract class ViewModelBase : Animatable, INotifyPropertyChanged
 	{
-		#region INotifyPropertyChanged Members
-
 		/// <summary>
-		/// Occurs when a property value changes.
+		/// Property Changed event. Occurs when a property value changes.
 		/// </summary>
 		public event PropertyChangedEventHandler PropertyChanged;
-
-		#endregion
-
-		internal static Duration Animation_Duration = new Duration(TimeSpan.FromMilliseconds(400));
-		internal static EasingFunctionBase Animation_EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseInOut };
-		//new SineEase() { EasingMode = EasingMode.EaseOut };
 
 		/// <summary>
 		/// Raises the <see cref="PropertyChanged"/> event with the specified
 		/// <see cref="PropertyChangedEventArgs.PropertyName"/>.
 		/// </summary>
 		/// <param name="propertyName">The name of the property whose value has changed.</param>
-		protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+		protected void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+		{
+			RaisePropertyChanged(new PropertyChangedEventArgs(propertyName));
+		}
+
+		protected void RaisePropertyChanged(PropertyChangedEventArgs evenArgs)
 		{
 			if (PropertyChanged != null)
 			{
-				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				PropertyChanged(this, evenArgs);
 			}
 		}
+
+		internal static Duration Animation_Duration = new Duration(TimeSpan.FromMilliseconds(400));
+		internal static EasingFunctionBase Animation_EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseInOut };
 	}
 }

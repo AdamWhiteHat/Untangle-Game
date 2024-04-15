@@ -69,6 +69,6 @@ namespace Untangle.Saves
 		/// An array containing all vertices in the saved game's current level.
 		/// </summary>
 		[XmlElement("Vertex")]
-		public Untangle.ViewModels.Vertex[] Vertices { get; set; }
+		public Untangle.Core.Vertex[] Vertices { get; set; }
 	}
 }

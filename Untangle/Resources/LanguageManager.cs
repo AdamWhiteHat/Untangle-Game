@@ -17,7 +17,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using Microsoft.Win32;
-using Untangle.ViewModels;
+using Untangle.Core;
 using WPFLocalizeExtension.Engine;
 
 namespace Untangle.Resources
@@ -73,7 +73,7 @@ namespace Untangle.Resources
 				// Store the language settings
 				SaveLanguageSettings();
 
-				OnPropertyChanged(SelectedLanguagePropertyName);
+				RaisePropertyChanged(SelectedLanguagePropertyName);
 			}
 		}
 

@@ -11,7 +11,7 @@ using Untangle.Enums;
 using System.ComponentModel;
 using Untangle.Generation;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	public class Graph : ViewModelBase
 	{
@@ -86,7 +86,7 @@ namespace Untangle.ViewModels
 				}
 
 				_intersectionCount = value;
-				OnPropertyChanged();
+				RaisePropertyChanged();
 			}
 		}
 		private int _intersectionCount;
@@ -155,8 +155,8 @@ namespace Untangle.ViewModels
 		private void CollectionChanged_Vertices(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			_vertices = null;
-			OnVertexCollectionChanged();
-			OnPropertyChanged("VertexCount");
+			RaiseVertexCollectionChanged();
+			RaisePropertyChanged("VertexCount");
 		}
 
 		/// <summary>
@@ -167,10 +167,10 @@ namespace Untangle.ViewModels
 		private void CollectionChanged_LineSegments(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			_lineSegments = null;
-			OnLineSegmentCollectionChanged();
+			RaiseLineSegmentCollectionChanged();
 		}
 
-		protected void OnVertexCollectionChanged()
+		protected void RaiseVertexCollectionChanged()
 		{
 			if (VertexCollectionChanged != null)
 			{
@@ -178,7 +178,7 @@ namespace Untangle.ViewModels
 			}
 		}
 
-		protected void OnLineSegmentCollectionChanged()
+		protected void RaiseLineSegmentCollectionChanged()
 		{
 			if (LineSegmentCollectionChanged != null)
 			{
@@ -186,7 +186,7 @@ namespace Untangle.ViewModels
 			}
 		}
 
-		protected void OnIntersectionCollectionChanged()
+		protected void RaiseIntersectionCollectionChanged()
 		{
 			if (IntersectionCollectionChanged != null)
 			{
@@ -386,7 +386,7 @@ namespace Untangle.ViewModels
 			}
 			if (intersectionChanged)
 			{
-				OnIntersectionCollectionChanged();
+				RaiseIntersectionCollectionChanged();
 			}
 		}
 
@@ -416,7 +416,7 @@ namespace Untangle.ViewModels
 
 				lineSegment.State = (intersectingSegments.Count > 0 ? LineSegmentState.Intersected : LineSegmentState.Normal);
 			}
-			OnIntersectionCollectionChanged();
+			RaiseIntersectionCollectionChanged();
 		}
 
 		protected override Freezable CreateInstanceCore()

@@ -17,7 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Untangle.Generation;
-using Untangle.ViewModels;
+using Untangle.Core;
 using XAMLMarkupExtensions.Base;
 
 namespace Untangle
@@ -35,7 +35,7 @@ namespace Untangle
 				if (value != _columns)
 				{
 					_columns = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -49,7 +49,7 @@ namespace Untangle
 				if (value != _rows)
 				{
 					_rows = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -63,7 +63,7 @@ namespace Untangle
 				if (value != _minEdges)
 				{
 					_minEdges = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -77,7 +77,7 @@ namespace Untangle
 				if (value != _maxEdges)
 				{
 					_maxEdges = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -91,7 +91,7 @@ namespace Untangle
 				if (value != _isGeneratedTypeSelected)
 				{
 					_isGeneratedTypeSelected = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -105,7 +105,7 @@ namespace Untangle
 				if (value != _isGraphNameTypeSelected)
 				{
 					_isGraphNameTypeSelected = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -119,7 +119,7 @@ namespace Untangle
 				if (value != _graphIndex)
 				{
 					_graphIndex = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -361,7 +361,7 @@ namespace Untangle
 		/// <see cref="PropertyChangedEventArgs.PropertyName"/>.
 		/// </summary>
 		/// <param name="propertyName">The name of the property whose value has changed.</param>
-		protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
+		protected void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = "")
 		{
 			if (PropertyChanged != null)
 			{

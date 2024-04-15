@@ -13,23 +13,13 @@ using System.Collections.Generic;
 using System.Windows;
 using Untangle.Enums;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	/// <summary>
 	/// A view model class for a single line segment in a game level.
 	/// </summary>
-	public class LineSegment : ViewModelBase
+	public class LineSegment
 	{
-		/// <summary>
-		/// Property name constant for the current state of the line segment.
-		/// </summary>
-		public const string StatePropertyName = "State";
-
-		/// <summary>
-		/// Property name constant for the Z index of the line segment.
-		/// </summary>
-		public const string ZIndexPropertyName = "ZIndex";
-
 		/// <summary>
 		/// The vertex at the first endpoint of the line segment.
 		/// </summary>
@@ -75,9 +65,6 @@ namespace Untangle.ViewModels
 				}
 
 				_state = value;
-
-				OnPropertyChanged(StatePropertyName);
-				OnPropertyChanged(ZIndexPropertyName);
 			}
 		}
 
@@ -161,11 +148,6 @@ namespace Untangle.ViewModels
 		public static Point MidPoint(Point a, Point b)
 		{
 			return new Point((a.X + b.X) / 2, (a.Y + b.Y) / 2);
-		}
-
-		protected override Freezable CreateInstanceCore()
-		{
-			return new LineSegment();
 		}
 
 		public override string ToString()

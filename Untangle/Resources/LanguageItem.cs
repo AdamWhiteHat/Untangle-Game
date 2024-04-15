@@ -10,7 +10,7 @@
 
 using System.Globalization;
 using System.Windows;
-using Untangle.ViewModels;
+using Untangle.Core;
 
 namespace Untangle.Resources
 {
@@ -72,7 +72,7 @@ namespace Untangle.Resources
 					return;
 
 				_isSelected = value;
-				OnPropertyChanged(IsSelectedPropertyName);
+				RaisePropertyChanged(IsSelectedPropertyName);
 			}
 		}
 

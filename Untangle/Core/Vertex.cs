@@ -20,23 +20,13 @@ using System.Windows.Shapes;
 //using Microsoft.Msagl.Core.Geometry.Curves;
 //using Microsoft.Msagl.Drawing;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	/// <summary>
 	/// A view model class for a single vertex in a game level.
 	/// </summary>
 	public class Vertex : ViewModelBase
 	{
-		/// <summary>
-		/// Property name constant for the current state of the vertex.
-		/// </summary>
-		public const string StatePropertyName = "State";
-
-		/// <summary>
-		/// Property name constant for the Z index of the vertex.
-		/// </summary>
-		public const string ZIndexPropertyName = "ZIndex";
-
 		/// <summary>
 		/// The unique identifier of the vertex in the saved game level.
 		/// </summary>
@@ -49,7 +39,7 @@ namespace Untangle.ViewModels
 				if (_id != value)
 				{
 					_id = value;
-					OnPropertyChanged();
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -96,7 +86,7 @@ namespace Untangle.ViewModels
 				if (Math.Round(oldValue, 4) != Math.Round(value, 4))
 				{
 					SetValue(XProperty, value);
-					OnPropertyChanged(nameof(X));
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -114,7 +104,7 @@ namespace Untangle.ViewModels
 				if (Math.Round(oldValue, 4) != Math.Round(value, 4))
 				{
 					SetValue(YProperty, value);
-					OnPropertyChanged(nameof(Y));
+					RaisePropertyChanged();
 				}
 			}
 		}
@@ -192,8 +182,8 @@ namespace Untangle.ViewModels
 				}
 
 				_state = value;
-				OnPropertyChanged(StatePropertyName);
-				OnPropertyChanged(ZIndexPropertyName);
+				RaisePropertyChanged();
+				RaisePropertyChanged(nameof(ZIndex));
 			}
 		}
 		private VertexState _state;
@@ -210,7 +200,7 @@ namespace Untangle.ViewModels
 				}
 
 				_color = value;
-				OnPropertyChanged();
+				RaisePropertyChanged();
 			}
 		}
 		private Brush _color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 255));
@@ -228,7 +218,7 @@ namespace Untangle.ViewModels
 				}
 
 				_colorIndex = newIndex;
-				OnPropertyChanged();
+				RaisePropertyChanged();
 				Color = ColorPalette.Default[_colorIndex];
 			}
 		}

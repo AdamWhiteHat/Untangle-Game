@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
-using Untangle.ViewModels;
+using Untangle.Core;
 
 using PointF = System.Drawing.PointF;
 
@@ -103,13 +103,13 @@ namespace Untangle.Generation
 		public static int Circle(Graph graph)
 		{
 			int vertexCount = graph.VertexCount;
-			List<ViewModels.Vertex> verticesToScramble = graph.Vertices.ToList();
+			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
 			int i = 0;
 			while (verticesToScramble.Count > 0)
 			{
 				int vertexIndex = RandomSingleton.Next(verticesToScramble.Count);
 
-				ViewModels.Vertex vertex = verticesToScramble[vertexIndex];
+				Core.Vertex vertex = verticesToScramble[vertexIndex];
 				double angle = Math.PI * 2 * i / vertexCount;
 				var position = new System.Windows.Point(Math.Cos(angle) * 300.0, -Math.Sin(angle) * 300.0);
 
@@ -130,12 +130,12 @@ namespace Untangle.Generation
 		public static int RandomPoints(Graph graph, System.Windows.Size size)
 		{
 			int vertexCount = graph.VertexCount;
-			List<ViewModels.Vertex> verticesToScramble = graph.Vertices.ToList();
+			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
 			int i = 0;
 			while (verticesToScramble.Count > 0)
 			{
 				int vertexIndex = RandomSingleton.Next(verticesToScramble.Count);
-				ViewModels.Vertex vertex = verticesToScramble[vertexIndex];
+				Core.Vertex vertex = verticesToScramble[vertexIndex];
 
 				int width = (int)(size.Width / 2);
 				int height = (int)(size.Height / 2);
@@ -181,12 +181,12 @@ namespace Untangle.Generation
 				colIndex++;
 			}
 
-			List<ViewModels.Vertex> verticesToScramble = graph.Vertices.ToList();
+			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
 			int i = 0;
 			while (verticesToScramble.Count > 0)
 			{
 				int vertexIndex = RandomSingleton.Next(verticesToScramble.Count);
-				ViewModels.Vertex vertex = verticesToScramble[vertexIndex];
+				Core.Vertex vertex = verticesToScramble[vertexIndex];
 
 				int latticeIndex = RandomSingleton.Next(latticePoints.Count);
 				(int, int) point = latticePoints[latticeIndex];
@@ -305,12 +305,12 @@ namespace Untangle.Generation
 
 			Stack<System.Drawing.Point> stack = new Stack<System.Drawing.Point>(selected);
 
-			List<ViewModels.Vertex> verticesToScramble = graph.Vertices.ToList();
+			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
 			int i = 0;
 			while (verticesToScramble.Count > 0)
 			{
 				int vertexIndex = RandomSingleton.Next(verticesToScramble.Count);
-				ViewModels.Vertex vertex = verticesToScramble[vertexIndex];
+				Core.Vertex vertex = verticesToScramble[vertexIndex];
 
 				var latticePoint = stack.Pop();
 
@@ -395,7 +395,7 @@ namespace Untangle.Generation
 					break;
 				}
 				int nextIndex = RandomSingleton.Next(0, vertexPool.Count);
-				ViewModels.Vertex vertex = vertexPool[nextIndex];
+				Core.Vertex vertex = vertexPool[nextIndex];
 
 				var position = PreturbPosition(new System.Windows.Point(point.X - xAdjustment, point.Y - yAdjustment));
 				vertex.SetPosition(position);

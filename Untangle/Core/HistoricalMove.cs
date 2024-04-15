@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace Untangle.ViewModels
+namespace Untangle.Core
 {
 	public class HistoricalMove
 	{
@@ -52,7 +52,7 @@ namespace Untangle.ViewModels
 
 		public override string ToString()
 		{
-			return $"#{MoveNumber}: Move VertexID {VertexId} from ({FromPosition.X}, {FromPosition.Y}) to ({ToPosition.X}, {ToPosition.Y}).";
+			return $"#{MoveNumber}: Mv Vtx #{VertexId} from ({Math.Round(FromPosition.X, 2)}, {Math.Round(FromPosition.Y, 2)}) to ({Math.Round(ToPosition.X, 2)}, {Math.Round(ToPosition.Y, 2)}).";
 		}
 	}
 }

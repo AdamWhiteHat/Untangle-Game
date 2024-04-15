@@ -21,7 +21,7 @@ using System.Xml.Serialization;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Untangle.Resources;
-using Untangle.ViewModels;
+using Untangle.Core;
 
 namespace Untangle.Saves
 {
@@ -40,6 +40,12 @@ namespace Untangle.Saves
 		/// </summary>
 		private const string HashElementName = "Hash";
 
+
+		private static string[] HashBypassValues = new string[]
+		{
+			 "DEBUG"
+		};
+
 		/// <summary>
 		/// Saves a game to a file chosen by the user.
 		/// </summary>
@@ -48,28 +54,6 @@ namespace Untangle.Saves
 		/// game file has been created successfully.</returns>
 		public static bool SaveGame(Game game, string fileName)
 		{
-			// Create saved vertex objects
-			//var savedVertices = new Dictionary<ViewModels.Vertex, Vertex>();
-			//int idCounter = 0;
-			//foreach (ViewModels.Vertex vertex in game.Level.GameObjects.OfType<ViewModels.Vertex>())
-			//{
-			//	var savedVertex = new Vertex
-			//	{
-			//		Id = idCounter++,
-			//		X = vertex.X,
-			//		Y = vertex.Y,
-			//	};
-			//	savedVertices[vertex] = savedVertex;
-			//}
-			//
-			//// Attach connected vertex IDs to saved vertex objects
-			//foreach (KeyValuePair<ViewModels.Vertex, Vertex> pair in savedVertices)
-			//{
-			//	pair.Value.ConnectedVertexIds = pair.Key.ConnectedVertices
-			//		.Select(d => savedVertices[d].Id)
-			//		.ToArray();
-			//}
-
 			Vertex[] vertices = game.Level.GameGraph.Vertices;
 
 			foreach (Vertex node in vertices)
@@ -194,7 +178,7 @@ namespace Untangle.Saves
 			string savedHash = hashElement.Value;
 			hashElement.Remove();
 
-			if (savedHash != "DEBUG")
+			if (!HashBypassValues.Contains(savedHash))
 			{
 				// Calculate the hash of the raw saved game XML document and ensure it matches the saved hash
 				string loadedHash = GetSavedGameHash(savedGameXml);
@@ -205,20 +189,23 @@ namespace Untangle.Saves
 			}
 
 			// De-serialize the saved game and return it
+			SavedGame result = null;
 			try
 			{
 				using (var stream = new MemoryStream())
 				{
 					savedGameXml.Save(stream, SaveOptions.DisableFormatting);
 					stream.Position = 0;
-					var xmlSerializer = new XmlSerializer(typeof(SavedGame));
-					return (SavedGame)xmlSerializer.Deserialize(stream);
+					XmlSerializer xmlSerializer = new XmlSerializer(typeof(SavedGame));
+					result = (SavedGame)xmlSerializer.Deserialize(stream);
 				}
 			}
 			catch (Exception ex)
 			{
 				throw new Exception(ExceptionMessages.DamagedSavedGame, ex);
 			}
+
+			return result;
 		}
 
 		/// <summary>

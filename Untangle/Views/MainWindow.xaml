@@ -15,7 +15,7 @@
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
         xmlns:v="clr-namespace:Untangle"
-        xmlns:vm="clr-namespace:Untangle.ViewModels"
+        xmlns:vm="clr-namespace:Untangle.Core"
 		xmlns:enum="clr-namespace:Untangle.Enums"
         
         Title="{Binding Title}"
@@ -33,7 +33,6 @@
         lex:ResxLocalizationProvider.DefaultDictionary="Resources.MainWindow" 
 		Icon="/Resources/Untangle.ico"
 		AllowsTransparency="True" 
-        behaviors:ExtendedVisualStateManager.UseFluidLayout="True"
         
         UseLayoutRounding="True"
         
@@ -79,8 +78,8 @@
         <CommandBinding Command="ApplicationCommands.Close" Executed="ExitCommand_Executed" />
         <CommandBinding Command="ApplicationCommands.Undo" Executed="UndoCommand_Executed" />
         <CommandBinding Command="ApplicationCommands.Redo" Executed="RedoCommand_Executed" />
-        <CommandBinding Command="{x:Static vm:MainViewModel.AboutCommand}" Executed="AboutCommand_Executed" />
-        <CommandBinding Command="{x:Static vm:MainViewModel.LanguageCommand}" Executed="LanguageCommand_Executed" />
+        <CommandBinding Command="{x:Static v:MainWindow.AboutCommand}" Executed="AboutCommand_Executed" />
+        <CommandBinding Command="{x:Static v:MainWindow.LanguageCommand}" Executed="LanguageCommand_Executed" />
     </Window.CommandBindings>
 
     <Grid>
@@ -196,9 +195,9 @@
 						  Click="mi_ColorByStartPositions_Click" />
                     <Separator />
                     <MenuItem x:Name="mi_AutoSolve" Header="Attempt Auto-Solve" Click="mi_AutoSolve_Click" />
-                    <MenuItem x:Name="mi_AttemptMoveVerticesToStartPositions"
-						  Header="Attempt To Send Vertices To Start Pos W/O Crossings"
-						  Click="mi_AttemptMoveVerticesToStartPositions_Click" />
+                    <MenuItem x:Name="mi_SendVerticesToStartPositions"
+						  Header="Send Vertices To Start Pos W/O Crossings"
+						  Click="mi_SendVerticesToStartPositions_Click" />
                     <MenuItem x:Name="mi_RandomizeVertices"
                           Header="Randomize Vertices' Locations"
                           Click="mi_RandomizeVertices_Click"
@@ -214,7 +213,7 @@
                                 <Setter Property="Header"
                                     Value="{Binding FriendlyName}" />
                                 <Setter Property="Command"
-                                    Value="{x:Static vm:MainViewModel.LanguageCommand}" />
+                                    Value="{x:Static v:MainWindow.LanguageCommand}" />
                                 <Setter Property="CommandParameter"
                                     Value="{Binding CultureName}" />
                                 <Setter Property="IsChecked"
@@ -241,7 +240,7 @@
                       Header="{lex:Loc}">
                     <MenuItem x:Name="mi_About"
                           Header="{lex:Loc}"
-                          Command="{x:Static vm:MainViewModel.AboutCommand}" />
+                          Command="{x:Static v:MainWindow.AboutCommand}" />
                 </MenuItem>
             </Menu>
 
@@ -287,7 +286,7 @@
 
             <Border Grid.Column="6" Grid.Row="1" Grid.RowSpan="2">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" >
-                    <TextBox x:Name="textBoxDebugInfo" Height="Auto" MaxWidth="270" Width="Auto" TextWrapping="Wrap" Text="" />
+                    <TextBox x:Name="textBoxDebugInfo" Height="Auto" MaxWidth="270" Width="Auto" TextWrapping="Wrap" Text="" IsUndoEnabled="False" />
                 </ScrollViewer>
             </Border>
 
@@ -298,9 +297,10 @@
                 <Grid x:Name="gameboardGrid" Background="Transparent" >
 
                     <ItemsControl x:Name="ic_GameField" ItemsSource="{Binding Game.Level.GameObjects}">
-                        <ItemsControl.LayoutTransform>
+
+                        <ItemsControl.RenderTransform>
                             <ScaleTransform ScaleX="{Binding ScaleZoom}" ScaleY="{Binding ScaleZoom}" />
-                        </ItemsControl.LayoutTransform>
+                        </ItemsControl.RenderTransform>
                         <ItemsControl.Resources>
                             <Style x:Key="vertexStyle"
 						           TargetType="Ellipse">

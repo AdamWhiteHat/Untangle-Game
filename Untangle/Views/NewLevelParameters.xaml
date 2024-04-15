@@ -74,7 +74,7 @@
                              />
                 </WrapPanel>
 
-                <WrapPanel HorizontalAlignment="Stretch" Style="{Binding ElementName=comboLayout, Mode=OneWay}">
+                <WrapPanel HorizontalAlignment="Stretch" Style="{Binding ElementName=comboGraphNames, Mode=OneWay}">
                     <Label Content="Max Edges:" Margin="3" Width="80" HorizontalContentAlignment="Right" />
                     <TextBox x:Name="tbMaxEdges" Margin="3" Width="150" HorizontalAlignment="Left" 
                              InputScope="Digits" PreviewTextInput="NumericTextBox_PreviewTextInput" 

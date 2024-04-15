@@ -124,7 +124,7 @@
     <value>Error while saving game</value>
   </data>
   <data name="SaveGamePrompt" xml:space="preserve">
-    <value>Save game?</value>
+    <value>Abandon game?</value>
   </data>
   <data name="SaveGameSuccess" xml:space="preserve">
     <value>Game saved successfully</value>

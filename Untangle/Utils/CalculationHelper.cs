@@ -9,7 +9,7 @@
  */
 
 using System.Windows;
-using Untangle.ViewModels;
+using Untangle.Core;
 
 namespace Untangle
 {

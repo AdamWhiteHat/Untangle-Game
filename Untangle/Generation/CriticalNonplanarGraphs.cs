@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Untangle.ViewModels;
+using Untangle.Core;
 
 namespace Untangle.Generation
 {
@@ -127,17 +127,17 @@ namespace Untangle.Generation
 					"{6,150}",
 					new int[][]
 					{
-						new int[] { 1, 3 },
-						new int[] { 1, 4 },
-						new int[] { 1, 5 },
-						new int[] { 1, 6 },
-						new int[] { 2, 3 },
-						new int[] { 2, 4 },
-						new int[] { 2, 5 },
-						new int[] { 2, 6 },
-						new int[] { 3, 5 },
-						new int[] { 3, 6 },
-						new int[] { 5, 6 },
+						new[] { 1, 3 },
+						new[] { 1, 4 },
+						new[] { 1, 5 },
+						new[] { 1, 6 },
+						new[] { 2, 3 },
+						new[] { 2, 4 },
+						new[] { 2, 5 },
+						new[] { 2, 6 },
+						new[] { 3, 5 },
+						new[] { 3, 6 },
+						new[] { 5, 6 },
 					}
 				},
 				/*
