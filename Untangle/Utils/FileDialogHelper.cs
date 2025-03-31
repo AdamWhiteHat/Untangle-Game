@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Untangle.Resources;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 
 	public static class FileDialogHelper

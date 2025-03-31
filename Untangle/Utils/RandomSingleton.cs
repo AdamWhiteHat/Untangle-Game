@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	public static class RandomSingleton
 	{

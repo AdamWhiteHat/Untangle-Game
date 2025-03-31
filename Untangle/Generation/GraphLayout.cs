@@ -1,4 +1,5 @@
-﻿using Microsoft.Msagl.GraphmapsWithMesh;
+﻿using Microsoft.Msagl.Core.Geometry.Curves;
+using Microsoft.Msagl.GraphmapsWithMesh;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
 using Untangle.Core;
+using Untangle.Utils;
 
 using PointF = System.Drawing.PointF;
 
@@ -26,7 +28,7 @@ namespace Untangle.Generation
 
 	public static class GraphLayout
 	{
-		public static int SelectRandomLayout(Graph graph, System.Windows.Size size)
+		public static int SelectRandomLayout(GameGraph graph, System.Windows.Size size)
 		{
 			int arrangement = RandomSingleton.Next(5);
 			int intersectionCount = 0;
@@ -57,7 +59,7 @@ namespace Untangle.Generation
 			return intersectionCount;
 		}
 
-		public static int ChooseLayout(Graph graph, System.Windows.Size size, GraphLayoutTypes layout)
+		public static int ChooseLayout(GameGraph graph, System.Windows.Size size, GraphLayoutTypes layout)
 		{
 			int intersectionCount = 0;
 			while (intersectionCount == 0)
@@ -100,7 +102,7 @@ namespace Untangle.Generation
 		/// Resets the positions of all vertices in the game level, arranging them in a circle in
 		/// random order.
 		/// </summary>
-		public static int Circle(Graph graph)
+		public static int Circle(GameGraph graph)
 		{
 			int vertexCount = graph.VertexCount;
 			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
@@ -127,7 +129,7 @@ namespace Untangle.Generation
 		/// <summary>
 		/// Resets the positions of all vertices in the game level, arranging them randomly.
 		/// </summary>
-		public static int RandomPoints(Graph graph, System.Windows.Size size)
+		public static int RandomPoints(GameGraph graph, System.Windows.Size size)
 		{
 			int vertexCount = graph.VertexCount;
 			List<Core.Vertex> verticesToScramble = graph.Vertices.ToList();
@@ -159,7 +161,7 @@ namespace Untangle.Generation
 		/// Resets the positions of all vertices in the game level, 
 		/// arranging them randomly into a regular square lattice.
 		/// </summary>
-		public static int Lattice(Graph graph, System.Windows.Size size, int rows, int columns)
+		public static int Lattice(GameGraph graph, System.Windows.Size size, int rows, int columns)
 		{
 			var lattice = GetLatticeRowsAndColumns(graph, size, rows, columns);
 
@@ -207,7 +209,65 @@ namespace Untangle.Generation
 			return graph.IntersectionCount;
 		}
 
-		private static (int[] Rows, int[] Columns) GetLatticeRowsAndColumns(Graph graph, System.Windows.Size size, int rows, int columns)
+		public static int RecenterVertices(GameGraph graph, System.Windows.Size size)
+		{
+			Core.Vertex[] vertices = graph.Vertices;
+
+			IEnumerable<double> Xs = vertices.Select(v => v.X);
+			IEnumerable<double> Ys = vertices.Select(v => v.Y);
+
+			double minX = Xs.Min();
+			double maxX = Xs.Max();
+
+			double minY = Ys.Min();
+			double maxY = Ys.Max();
+
+			double spanY = 0;
+			double spanX = 0;
+
+			if (Math.Sign(minX) == -1)
+			{
+				spanX = Math.Abs(minX) + maxX;
+			}
+			else
+			{
+				spanX = maxX - minX;
+			}
+
+			if (Math.Sign(minY) == -1)
+			{
+				spanY = Math.Abs(minY) + maxY;
+			}
+			else
+			{
+				spanY = maxY - minY;
+			}
+
+			double halfSpanX = spanX / 2;
+			double halfSpanY = spanY / 2;
+
+			double toAddX = toAddX = -(minX + halfSpanX);
+			double toAddY = toAddY = -(minY + halfSpanY);
+
+			int index = 0;
+			int maxIndex = graph.VertexCount;
+			while (index < maxIndex)
+			{
+				Core.Vertex vertex = vertices[index];
+
+				System.Windows.Point pos = vertex.GetPosition();
+				pos.X += toAddX;
+				pos.Y += toAddY;
+				vertex.SetPosition(pos);
+				vertex.StartingPosition = pos;
+
+				index++;
+			}
+			graph.CalculateAllIntersections();
+			return graph.IntersectionCount;
+		}
+
+		private static (int[] Rows, int[] Columns) GetLatticeRowsAndColumns(GameGraph graph, System.Windows.Size size, int rows, int columns)
 		{
 			int width = (int)(size.Width - (size.Width / 10));
 			int height = (int)(size.Height - (size.Height / 10));
@@ -251,7 +311,7 @@ namespace Untangle.Generation
 		/// Resets the positions of all vertices in the game level, 
 		/// arranging them randomly into lattice points based on wave equations.
 		/// </summary>
-		public static int QuaziCrystal(Graph graph, System.Windows.Size size, int rows, int columns)
+		public static int QuaziCrystal(GameGraph graph, System.Windows.Size size, int rows, int columns)
 		{
 			var lattice = GetLatticeRowsAndColumns(graph, size, rows, columns);
 
@@ -368,7 +428,7 @@ namespace Untangle.Generation
 		/// <summary>
 		///  Resets the positions of all vertices in the game level, arranging them in a Hexagonal lattice.
 		/// </summary>
-		public static int Hexagonal(Graph graph, System.Windows.Size size)
+		public static int Hexagonal(GameGraph graph, System.Windows.Size size)
 		{
 			int hexagonsRequired = graph.VertexCount / 3;
 

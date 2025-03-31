@@ -17,17 +17,9 @@ namespace Untangle.Core
 		public string GameUID { get; private set; }
 
 		/// <summary>
-		/// The move number. 
-		/// Tracks the order of the moves. 
-		/// The first move is 1, second move is 2, and so on.
-		/// Used to ensure the moves are replayed in the correct order.
+		/// The vertex that was moved during this move.
 		/// </summary>
-		public int MoveNumber { get; private set; }
-
-		/// <summary>
-		/// The unique ID of the vertex that was moved during this move.
-		/// </summary>
-		public int VertexId { get; private set; }
+		public Vertex Vertex { get; private set; }
 
 		/// <summary>
 		/// The moved vertex's starting position.
@@ -39,20 +31,55 @@ namespace Untangle.Core
 		/// </summary>
 		public Point ToPosition { get; private set; }
 
-		public string VertexName { get { return $"Vertex_{VertexId}"; } }
+		/// <summary>
+		/// The previous move in the undo/redo chain. This property aids deletion of items from the middle of the sequence.
+		/// </summary>
+		public HistoricalMove PreviousMove { get; set; } = null;
 
-		public HistoricalMove(string gameUID, int moveNumber, int vertexId, Point from, Point to)
+		/// <summary>
+		///  The next move in the undo/redo chain. This property aids deletion of items from the middle of the sequence.
+		/// </summary>
+		public HistoricalMove NextMove { get; set; } = null;
+
+		public HistoricalMove(string gameUID, Vertex vertex, Point from, Point to)
 		{
 			GameUID = gameUID;
-			MoveNumber = moveNumber;
-			VertexId = vertexId;
+			Vertex = vertex;
 			FromPosition = from;
 			ToPosition = to;
 		}
 
+		public void DeleteSelf()
+		{
+			//                              My.To -> NextMove.From
+			//                   My.From -> My.To
+			//PreviousMove.To -> My.From
+
+			if (PreviousMove != null)
+			{
+				PreviousMove.ToPosition = this.ToPosition;
+				if (NextMove != null)
+				{
+					PreviousMove.NextMove = NextMove;
+
+				}
+			}
+			if (NextMove != null)
+			{
+				NextMove.FromPosition = this.FromPosition;
+				if (PreviousMove != null)
+				{
+					NextMove.PreviousMove = PreviousMove;
+				}
+			}
+
+
+			Vertex.HistoryStack.Remove(this);
+		}
+
 		public override string ToString()
 		{
-			return $"#{MoveNumber}: Mv Vtx #{VertexId} from ({Math.Round(FromPosition.X, 2)}, {Math.Round(FromPosition.Y, 2)}) to ({Math.Round(ToPosition.X, 2)}, {Math.Round(ToPosition.Y, 2)}).";
+			return $"V{Vertex.Id}: ({Math.Round(FromPosition.X, 2)}, {Math.Round(FromPosition.Y, 2)}) -> ({Math.Round(ToPosition.X, 2)}, {Math.Round(ToPosition.Y, 2)})";
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Untangle.Core
 {
 	public static class AutoSolver
 	{
-		public static void Solve(Untangle.Core.Graph graph, System.Windows.Size gameBoardSize)
+		public static void Solve(Untangle.Core.GameGraph graph, System.Windows.Size gameBoardSize)
 		{
 			Dictionary<Vertex, Microsoft.Msagl.Core.Layout.Node> vertexNodeDictionary = new Dictionary<Vertex, Microsoft.Msagl.Core.Layout.Node>();
 			GeometryGraph layoutGraph = new GeometryGraph()

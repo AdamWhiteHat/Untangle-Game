@@ -24,13 +24,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using System.Windows.Threading;
 using Untangle.Generation;
 using Untangle.Core;
-using XAMLMarkupExtensions.Base;
+using Untangle.Utils;
 using Vertex = Untangle.Core.Vertex;
-using System.Windows.Forms.PropertyGridInternal;
 using System.Windows.Data;
+using WPFLocalizeExtension.Providers;
+using System.Reflection;
+using System.Collections;
+using Untangle.Resources;
 
 namespace Untangle
 {
@@ -48,12 +50,6 @@ namespace Untangle
 		/// A command for displaying the About box of the application.
 		/// </summary>
 		public static ICommand AboutCommand = new RoutedCommand();
-
-
-
-
-
-
 
 		/// <summary>
 		/// The main window's view model instance.
@@ -74,24 +70,58 @@ namespace Untangle
 		public MainWindow()
 		{
 			InitializeComponent();
-			_viewModel = (MainViewModel)DataContext;
 			this.AllowsTransparency = true;
+			_viewModel = (MainViewModel)DataContext;
 
 			textBlockOpacity.DataContext = this;
 			imageIcon.DataContext = this;
+
+			debugView.Width = 0;
+			mi_DebugView.IsChecked = false;
 			levelEditorInstructions.Visibility = Visibility.Hidden;
 
 			ic_GameField.SizeChanged += Ic_GameField_SizeChanged;
-			this.Loaded += MainWindow_Loaded;
-
 			ic_GameField.ClipToBounds = true;
 			ic_GameField.UseLayoutRounding = true;
+
+			this.Loaded += MainWindow_Loaded;
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			ViewModel.SetBoardSize(ic_GameField.RenderSize);
-			ViewModel.InitialGame();
+			double actualWidth = ic_GameField.ActualWidth;
+			double actualHeight = ic_GameField.ActualHeight;
+			var renderSize = ic_GameField.RenderSize;
+			var desiredSize = ic_GameField.DesiredSize;
+
+			var a = this.RenderSize;
+			var b = this.DesiredSize;
+			var ah = this.ActualHeight;
+			var hw = this.ActualWidth;
+			var tw = this.Width;
+			var th = this.Height;
+
+			_viewModel.SetBoardSize(ic_GameField.RenderSize);
+
+			Style itemUndoContainerStyle = new Style(typeof(ListBoxItem));
+			itemUndoContainerStyle.Setters.Add(new Setter(ListBoxItem.AllowDropProperty, true));
+			itemUndoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(lbUndoRedoListItem_PreviewMouseLeftButtonDown)));
+			itemUndoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(UndoRedoListItem_PreviewMouseLeftButtonUp)));
+			itemUndoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.MouseMoveEvent, new MouseEventHandler(UndoRedoListItem_MouseMove)));
+			itemUndoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.DropEvent, new DragEventHandler(lbUndoRedoListItem_Drop)));
+			itemUndoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.KeyUpEvent, new KeyEventHandler(lbUndoRedoListItem_KeyUp)));
+			lbUndoListBox.ItemContainerStyle = itemUndoContainerStyle;
+
+			Style itemRedoContainerStyle = new Style(typeof(ListBoxItem));
+			itemRedoContainerStyle.Setters.Add(new Setter(ListBoxItem.AllowDropProperty, true));
+			itemRedoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(lbUndoRedoListItem_PreviewMouseLeftButtonDown)));
+			itemRedoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(UndoRedoListItem_PreviewMouseLeftButtonUp)));
+			itemRedoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.MouseMoveEvent, new MouseEventHandler(UndoRedoListItem_MouseMove)));
+			itemRedoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.DropEvent, new DragEventHandler(lbUndoRedoListItem_Drop)));
+			itemRedoContainerStyle.Setters.Add(new EventSetter(ListBoxItem.KeyUpEvent, new KeyEventHandler(lbUndoRedoListItem_KeyUp)));
+			lbRedoListBox.ItemContainerStyle = itemRedoContainerStyle;
+
+			ViewModel.InitializeGame(ic_GameField.RenderSize);
 		}
 
 		private void SetTitle(string title)
@@ -170,6 +200,11 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void NewGameCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
+			if (!MainWindow.ConfirmQuit())
+			{
+				return;
+			}
+
 			ViewModel.NewGame(ic_GameField.RenderSize);
 			UpdateDebugOutput();
 		}
@@ -204,6 +239,17 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void LoadGameCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
+			if (!ConfirmQuit())
+			{
+				return;
+			}
+
+			if (ViewModel.IsEditing)
+			{
+				ToggleLevelEditor();
+			}
+
+
 			string fileName;
 			if (!FileDialogHelper.PromptForFileToLoad(out fileName))
 			{
@@ -216,6 +262,43 @@ namespace Untangle
 			}
 
 			UpdateDebugOutput();
+		}
+
+		/// <summary>
+		/// Handles the <see cref="System.Windows.Input.CommandBinding.Executed"/> event of the
+		/// command binding for the Exit command.
+		/// </summary>
+		/// <param name="sender">The object which raised the event.</param>
+		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
+		private void ExitCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+		{
+			if (ViewModel.IsEditing)
+			{
+				ToggleLevelEditor();
+			}
+
+			Close();
+		}
+
+		/// <summary>
+		/// Handles the <see cref="System.Windows.Window.Closing"/> event of the Main window.
+		/// </summary>
+		/// <param name="sender">The object which raised the event.</param>
+		/// <param name="e">The <see cref="CancelEventArgs"/>  containing the event arguments.</param>
+		private void Window_Closing(object sender, CancelEventArgs e)
+		{
+			e.Cancel = !MainWindow.ConfirmQuit();
+		}
+
+		/// <summary>
+		/// Handles the <see cref="System.Windows.Input.CommandBinding.Executed"/> event of the
+		/// command binding for the Language choice command.
+		/// </summary>
+		/// <param name="sender">The object which raised the event.</param>
+		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
+		private void LanguageCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+		{
+			ViewModel.LanguageManager.SelectLanguage((string)e.Parameter);
 		}
 
 		/// <summary>
@@ -234,40 +317,51 @@ namespace Untangle
 		}
 
 		/// <summary>
-		/// Handles the <see cref="System.Windows.Input.CommandBinding.Executed"/> event of the
-		/// command binding for the Exit command.
+		/// Displays a save game prompt when the user is about to lose his current game progress, if needed.
 		/// </summary>
-		/// <param name="sender">The object which raised the event.</param>
-		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
-		private void ExitCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+		/// <returns>
+		/// <see langword="true"/> if the current operation  should proceed, possibly losing game state.
+		/// This happens either when there is no unsaved game state (IsDirty flag is false), or the user has indicated they do not care.
+		/// <see langword="true"/> if the current operation should abort, preserving the current game state.
+		/// </returns>
+		/// <remarks>
+		/// <para>The save game prompt is not needed if the user has not dragged any vertices since
+		/// the game was started or last saved.</para>
+		/// </remarks>
+		public static bool ConfirmQuit()
 		{
-			if (ViewModel.IsEditing)
+			if (!_viewModel.IsDirty)
 			{
-				ViewModel.ToggleLevelEditor();
+				return true;
 			}
 
-			Close();
+			MessageBoxResult result =
+				MessageBox.Show(
+					Messages.SaveGamePrompt,
+					MessageCaptions.SaveGamePrompt,
+					MessageBoxButton.YesNo,
+					MessageBoxImage.Warning);
+
+			return (result == MessageBoxResult.Yes);
 		}
 
 		/// <summary>
-		/// Handles the <see cref="System.Windows.Window.Closing"/> event of the Main window.
+		/// Toggles the level editor.
 		/// </summary>
-		/// <param name="sender">The object which raised the event.</param>
-		/// <param name="e">The <see cref="CancelEventArgs"/>  containing the event arguments.</param>
-		private void Window_Closing(object sender, CancelEventArgs e)
+		public void ToggleLevelEditor()
 		{
-			e.Cancel = !ViewModel.ConfirmQuit();
-		}
-
-		/// <summary>
-		/// Handles the <see cref="System.Windows.Input.CommandBinding.Executed"/> event of the
-		/// command binding for the Language choice command.
-		/// </summary>
-		/// <param name="sender">The object which raised the event.</param>
-		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
-		private void LanguageCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-		{
-			ViewModel.LanguageManager.SelectLanguage((string)e.Parameter);
+			if (!ViewModel.Game.IsEditing)
+			{
+				if (!MainWindow.ConfirmQuit())
+				{
+					return;
+				}
+				ViewModel.Game.EnterEditMode();
+			}
+			else
+			{
+				ViewModel.Game.ExitEditMode();
+			}
 		}
 
 		#endregion
@@ -422,7 +516,7 @@ namespace Untangle
 			{
 				if (e.SystemKey == Key.Enter)
 				{
-					ViewModel.Game.Level.ShrinkLongestEdge();
+					ViewModel.Game.ShrinkLongestEdge();
 				}
 			}
 		}
@@ -440,13 +534,19 @@ namespace Untangle
 		{
 			e.Handled = true;
 
-			HistoricalMove doMove = ViewModel.Game.Level.MoveHistory.ElementAtOrDefault(ViewModel.Game.Level.MoveCount - 1);
+			if (!ViewModel.Game.UndoStack.Any())
+			{
+				return;
+			}
+
+			HistoricalMove doMove = ViewModel.Game.UndoStack.Pop();  // ViewModel.Game.MoveHistory.ElementAtOrDefault(ViewModel.Game.MoveCount - 1);
+			ViewModel.Game.RedoStack.Push(doMove);
 			if (doMove == null)
 			{
 				return;
 			}
 
-			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
+			Vertex matchingVertex = doMove.Vertex;
 			if (matchingVertex == null)
 			{
 				return;
@@ -455,7 +555,7 @@ namespace Untangle
 			Point fromPoint = doMove.ToPosition;
 			Point toPoint = doMove.FromPosition;
 
-			ViewModel.Game.Level.MoveCount -= 1;
+			ViewModel.Game.MoveCount -= 1;
 
 			AnimateVertexMovement(matchingVertex, fromPoint, toPoint);
 		}
@@ -469,19 +569,25 @@ namespace Untangle
 		{
 			e.Handled = true;
 
-			HistoricalMove doMove = ViewModel.Game.Level.MoveHistory.ElementAtOrDefault(ViewModel.Game.Level.MoveCount + 1);
+			if (!ViewModel.Game.RedoStack.Any())
+			{
+				return;
+			}
+
+			HistoricalMove doMove = ViewModel.Game.RedoStack.Pop();//ViewModel.Game.MoveHistory.ElementAtOrDefault(ViewModel.Game.MoveCount + 1);
+			ViewModel.Game.UndoStack.Push(doMove);
 			if (doMove == null)
 			{
 				return;
 			}
 
-			Vertex matchingVertex = GetVertexFromId(doMove.VertexId);
+			Vertex matchingVertex = doMove.Vertex;
 			if (matchingVertex == null)
 			{
 				return;
 			}
 
-			ViewModel.Game.Level.MoveCount += 1;
+			ViewModel.Game.MoveCount += 1;
 
 			Point fromPoint = doMove.FromPosition;
 			Point toPoint = doMove.ToPosition;
@@ -498,7 +604,7 @@ namespace Untangle
 
 			Point fromPoint = vertex.GetPosition();
 			Point toPoint = vertex.StartingPosition.Value;
-			ViewModel.Game.Level.AddMoveToHistory(vertex.Id, fromPoint, toPoint);
+			ViewModel.Game.AddMoveToHistory(vertex, fromPoint, toPoint);
 
 			AnimateVertexMovement(vertex, fromPoint, toPoint);
 		}
@@ -512,16 +618,16 @@ namespace Untangle
 			{
 				//using (var d = Dispatcher.DisableProcessing())
 				//{
-					//this.Dispatcher.BeginInvoke(new Action(() => {
+				//this.Dispatcher.BeginInvoke(new Action(() => {
 
-					vertex.SetValue(Vertex.XProperty, to.X);
-					vertex.BeginAnimation(Vertex.XProperty, null);
+				vertex.SetValue(Vertex.XProperty, to.X);
+				vertex.BeginAnimation(Vertex.XProperty, null);
 
-					_viewModel.Game.Level.GameGraph.RecalculateIntersections(vertex);
-					UpdateDebugOutput();
-					_viewModel.Game.Level.GameSolvedCheck();
+				_viewModel.Game.Graph.RecalculateIntersections(vertex);
+				UpdateDebugOutput();
+				_viewModel.Game.GameSolvedCheck();
 
-					//}), DispatcherPriority.Render);
+				//}), DispatcherPriority.Render);
 				//}
 			};
 
@@ -529,16 +635,16 @@ namespace Untangle
 			{
 				//using (var d = Dispatcher.DisableProcessing())
 				//{
-					//this.Dispatcher.BeginInvoke(new Action(() => {
+				//this.Dispatcher.BeginInvoke(new Action(() => {
 
-					vertex.SetValue(Vertex.YProperty, to.Y);
-					vertex.BeginAnimation(Vertex.YProperty, null);
+				vertex.SetValue(Vertex.YProperty, to.Y);
+				vertex.BeginAnimation(Vertex.YProperty, null);
 
-					_viewModel.Game.Level.GameGraph.RecalculateIntersections(vertex);
-					UpdateDebugOutput();
-					_viewModel.Game.Level.GameSolvedCheck();
+				_viewModel.Game.Graph.RecalculateIntersections(vertex);
+				UpdateDebugOutput();
+				_viewModel.Game.GameSolvedCheck();
 
-					//}), DispatcherPriority.Render);
+				//}), DispatcherPriority.Render);
 				//}
 			};
 
@@ -555,7 +661,7 @@ namespace Untangle
 		/// </summary>
 		private void MenuCommand_LevelBuilder_Click(object sender, RoutedEventArgs e)
 		{
-			ViewModel.ToggleLevelEditor();
+			ToggleLevelEditor();
 
 			if (ViewModel.IsEditing)
 			{
@@ -563,6 +669,7 @@ namespace Untangle
 				borderGameField.BorderBrush = Brushes.Red;
 				levelEditorInstructions.Visibility = Visibility.Visible;
 				mi_RandomizeVertices.Visibility = Visibility.Visible;
+				mi_RecenterAllVertices.Visibility = Visibility.Visible;
 			}
 			else
 			{
@@ -570,6 +677,7 @@ namespace Untangle
 				borderGameField.SetResourceReference(Border.BorderBrushProperty, "windowBorderColor");
 				levelEditorInstructions.Visibility = Visibility.Hidden;
 				mi_RandomizeVertices.Visibility = Visibility.Collapsed;
+				mi_RecenterAllVertices.Visibility = Visibility.Collapsed;
 			}
 		}
 
@@ -577,13 +685,13 @@ namespace Untangle
 
 		private void ColorGraph_Click(object sender, RoutedEventArgs e)
 		{
-			int chromaticNumber = GameLevel.GetChromaticNumber(ViewModel.Game.Level.GameGraph.Vertices);
+			int chromaticNumber = GameState.GetChromaticNumber(ViewModel.Game.Graph.Vertices);
 			MessageBox.Show($"The graph's chromatic number is: {chromaticNumber}", "Chromatic Number", MessageBoxButton.OK);
 		}
 
 		private void mi_ColorByStartPositions_Click(object sender, RoutedEventArgs e)
 		{
-			ViewModel.Game.Level.MarkVerticesInStartPosition();
+			ViewModel.Game.MarkVerticesInStartPosition();
 		}
 
 		#endregion
@@ -598,7 +706,7 @@ namespace Untangle
 
 		private void mi_SendVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
 		{
-			foreach (Vertex vertex in ViewModel.Game.Level.GameGraph.Vertices)
+			foreach (Vertex vertex in ViewModel.Game.Graph.Vertices)
 			{
 				SendVertexToStartingPosition(vertex);
 			}
@@ -607,8 +715,13 @@ namespace Untangle
 
 		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
 		{
-			ViewModel.Game.Level.Edit_RandomizeVertices(ic_GameField.RenderSize);
+			ViewModel.Game.Edit_RandomizeVertices(ic_GameField.RenderSize);
 			UpdateDebugOutput();
+		}
+
+		private void mi_RecenterAllVertices_Click(object sender, RoutedEventArgs e)
+		{
+			ViewModel.Game.Edit_RecenterVertices(ic_GameField.RenderSize);
 		}
 
 		#endregion
@@ -651,12 +764,14 @@ namespace Untangle
 		{
 			if (mi_DebugView.IsChecked)
 			{
-				ViewModel.Game.Level.PlayerMoved += UpdateDebugOutput;
+				debugView.Width = 175;
+				ViewModel.Game.PlayerMoved += UpdateDebugOutput;
 				UpdateDebugOutput(null, EventArgs.Empty);
 			}
 			else
 			{
-				ViewModel.Game.Level.PlayerMoved -= UpdateDebugOutput;
+				debugView.Width = 0;
+				ViewModel.Game.PlayerMoved -= UpdateDebugOutput;
 				textBoxDebugInfo.Clear();
 			}
 		}
@@ -670,36 +785,164 @@ namespace Untangle
 		{
 			if (mi_DebugView.IsChecked)
 			{
+
+				/*
 				StringBuilder output = new StringBuilder();
 
 				output.AppendLine();
 				output.AppendLine("Undo/Redo buffer:");
-				output.AppendLine($"Position.Index: {ViewModel.Game.Level.MoveCount - 1}");
-				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.MoveHistory.Select(mv => mv.ToString())));
+				output.AppendLine($"Position.Index: {ViewModel.Game.MoveCount - 1}");
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.MoveHistory.Select(mv => mv.ToString())));
 				output.AppendLine();
 				output.AppendLine("Vertices:");
-				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Vertices.Select(v => v.ToString())));
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Graph.Vertices.Select(v => v.ToString())));
 				output.AppendLine();
 				output.AppendLine();
 				output.AppendLine("Line Segments:");
-				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.LineSegments.Select(v => v.ToString())));
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Graph.LineSegments.Select(v => v.ToString())));
 				output.AppendLine();
 				output.AppendLine();
 				output.AppendLine("Intersections:");
-				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Intersections.Select(v => $"{v.Key}:" + Environment.NewLine + "\t" + $"{string.Join(Environment.NewLine + "\t", v.Value.Select(h => h.ToString()))}")));
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Graph.Intersections.Select(v => $"{v.Key}:" + Environment.NewLine + "\t" + $"{string.Join(Environment.NewLine + "\t", v.Value.Select(h => h.ToString()))}")));
 				output.AppendLine();
 				output.AppendLine();
 				output.AppendLine("Starting Position(s):");
-				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Level.GameGraph.Vertices.Select(v => $"({v.StartingPosition.Value.X}, {v.StartingPosition.Value.Y})")));
+				output.AppendLine(string.Join(Environment.NewLine, ViewModel.Game.Graph.Vertices.Select(v => $"({v.StartingPosition.Value.X}, {v.StartingPosition.Value.Y})")));
 				output.AppendLine();
 
 				textBoxDebugInfo.SetCurrentValue(TextBox.TextProperty, output.ToString());
+				*/
 			}
 		}
 
+		private void lbUndoRedoListItem_KeyUp(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Delete)
+			{
+				ListBoxItem sourceItem = (ListBoxItem)sender;
+				ListBox sourceControl = sourceItem.GetParentOfType<ListBox>() as ListBox;
+
+				ObservableStack<HistoricalMove> sourceStack = GetBoundStackFromListbox(sourceControl);
+
+				IList toRemove = sourceControl.SelectedItems;
+				int index = 0;
+				while (index < toRemove.Count)
+				{
+					HistoricalMove item = toRemove[index] as HistoricalMove;
+					item.DeleteSelf();
+					sourceStack.Remove(item);
+				}
+			}
+			else if (Keyboard.Modifiers == ModifierKeys.Control)
+			{
+				if (e.Key == Key.A)
+				{
+					ListBoxItem sourceItem = (ListBoxItem)sender;
+					ListBox sourceControl = sourceItem.GetParentOfType<ListBox>() as ListBox;
+					sourceControl.SelectAll();
+				}
+			}
+		}
+
+
 		#endregion
 
 		#endregion
+
+		private ListBoxItem draggedItem = null;
+
+		private void lbUndoRedoListItem_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			if (sender is ListBoxItem)
+			{
+				ListBoxItem sourceItem = sender as ListBoxItem;
+
+				draggedItem = sourceItem;
+
+				//DragDrop.DoDragDrop(sourceItem, sourceItem, System.Windows.DragDropEffects.Move);
+				//sourceItem.IsSelected = true;
+				//e.Handled = true;
+			}
+		}
+
+		private void UndoRedoListItem_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+		{
+			if (draggedItem != null)
+			{
+				draggedItem = null;
+			}
+		}
+
+		private void UndoRedoListItem_MouseMove(object sender, MouseEventArgs e)
+		{
+			if (e.LeftButton == MouseButtonState.Pressed)
+			{
+				if (draggedItem != null)
+				{
+					DragDrop.DoDragDrop(draggedItem, draggedItem, System.Windows.DragDropEffects.Move);
+					draggedItem = null;
+				}
+			}
+		}
+
+		private ObservableStack<HistoricalMove> GetBoundStackFromListbox(ListBox parentListbox)
+		{
+			BindingExpression bindingExpression = parentListbox.GetBindingExpression(ListBox.ItemsSourceProperty);
+			return bindingExpression.GetBoundPropertyValue<ObservableStack<HistoricalMove>>();
+		}
+
+		private void lbUndoRedoListItem_Drop(object sender, System.Windows.DragEventArgs e)
+		{
+			ListBoxItem sourceItem = e.Data.GetData(typeof(ListBoxItem)) as ListBoxItem;
+			ListBoxItem targetItem = sender as ListBoxItem;
+
+
+			ListBox sourceControl = sourceItem.GetParentOfType<ListBox>() as ListBox;
+			ListBox targetControl = targetItem.GetParentOfType<ListBox>() as ListBox;
+
+			if (sourceControl == null || targetControl == null)
+			{
+				return;
+			}
+
+			ObservableStack<HistoricalMove> sourceStack = GetBoundStackFromListbox(sourceControl);
+			ObservableStack<HistoricalMove> targetStack = GetBoundStackFromListbox(targetControl);
+
+			if (sourceStack == null || targetStack == null)
+			{
+				return;
+			}
+
+			HistoricalMove souceMove = sourceItem.DataContext as HistoricalMove;
+			HistoricalMove targetMove = targetItem.DataContext as HistoricalMove;
+
+			int fromIndex = sourceControl.Items.IndexOf(souceMove);
+			int toIndex = targetControl.Items.IndexOf(targetMove);
+
+
+			if (sourceControl != targetControl)
+			{
+				sourceStack.RemoveAt(fromIndex);
+				targetStack.Insert(toIndex + 1, souceMove);
+			}
+			else
+			{
+				if (fromIndex < toIndex)
+				{
+					targetStack.Insert(toIndex + 1, souceMove);
+					sourceStack.RemoveAt(fromIndex);
+				}
+				else
+				{
+					int remIdx = fromIndex + 1;
+					if (targetStack.Count + 1 > remIdx)
+					{
+						targetStack.Insert(toIndex, souceMove);
+						sourceStack.RemoveAt(remIdx);
+					}
+				}
+			}
+		}
 
 	}
 }

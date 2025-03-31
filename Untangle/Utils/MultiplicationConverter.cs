@@ -13,7 +13,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Markup;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// A value converter class which converts its input to <see cref="double"/> and then

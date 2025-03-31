@@ -36,7 +36,7 @@ namespace Untangle.Core
 			RaisePropertyChanged(new PropertyChangedEventArgs(propertyName));
 		}
 
-		protected void RaisePropertyChanged(PropertyChangedEventArgs evenArgs)
+		public void RaisePropertyChanged(PropertyChangedEventArgs evenArgs)
 		{
 			if (PropertyChanged != null)
 			{

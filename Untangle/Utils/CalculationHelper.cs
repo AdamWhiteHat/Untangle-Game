@@ -11,7 +11,7 @@
 using System.Windows;
 using Untangle.Core;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// A helper class that provides methods for identifying intersections between line segments.

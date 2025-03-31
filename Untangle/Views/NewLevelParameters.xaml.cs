@@ -212,7 +212,7 @@ namespace Untangle
 		/// </summary>
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public NewLevelParameters(int initialRowValue = 3, int initialColumnValue = 2, int initialMinEdgesValue = 2, int initialMaxEdgesValue = 4)
+		public NewLevelParameters(int initialRowValue = 3, int initialColumnValue = 2,  int initialMaxEdgesValue = 4, int initialMinEdgesValue = 2)
 		{
 			InitializeComponent();
 
@@ -222,9 +222,6 @@ namespace Untangle
 			_maxEdges = initialMaxEdgesValue;
 
 			this.Loaded += NewLevelParameters_Loaded;
-
-
-
 		}
 
 		private void NewLevelParameters_Loaded(object sender, RoutedEventArgs e)

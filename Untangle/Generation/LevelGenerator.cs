@@ -12,8 +12,9 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Untangle.Core;
+using Untangle.Utils;
 using System.Windows;
-using static Untangle.Core.GameLevel;
+using static Untangle.Core.GameState;
 using System.Drawing;
 using Microsoft.Msagl.GraphmapsWithMesh;
 
@@ -95,13 +96,11 @@ namespace Untangle.Generation
 		/// Generates level zero.
 		/// </summary>
 		/// <returns>The generated level.</returns>
-		public GameLevel GenerateLevel()
+		private GameState GenerateLevel()
 		{
-			Initialize();
-
-			GameLevel result = GameLevel.Create(_connectedSubgraphs.Keys);
-			int intersectionCount = GraphLayout.Circle(result.GameGraph);
-			result.GameGraph.IntersectionCount = intersectionCount;
+			GameState result = GameState.Create(_connectedSubgraphs.Keys);			
+			int intersectionCount = GraphLayout.Circle(result.Graph);
+			result.Graph.IntersectionCount = intersectionCount;
 			return result;
 		}
 
@@ -111,21 +110,21 @@ namespace Untangle.Generation
 		/// <param name="gameboardSize">The size of the game window.
 		/// The Level generator will generate all the tame assets within these bounds.</param>
 		/// <returns>The generated level.</returns>
-		public GameLevel GenerateLevel(System.Windows.Size gameboardSize)
+		public GameState GenerateLevel(System.Windows.Size gameboardSize)
 		{
 			Initialize();
 
-			GameLevel result = null;
+			GameState result = null;
 			if (!_connectedSubgraphs.Any())
 			{
 				result = GenerateLevel();
 			}
 			else
 			{
-				result = GameLevel.Create(gameboardSize, _connectedSubgraphs.Keys);
+				result = GameState.Create(gameboardSize, _connectedSubgraphs.Keys);
 
-				int intersectionCount = GraphLayout.SelectRandomLayout(result.GameGraph, gameboardSize);
-				result.GameGraph.IntersectionCount = intersectionCount;
+				int intersectionCount = GraphLayout.SelectRandomLayout(result.Graph, gameboardSize);
+				result.Graph.IntersectionCount = intersectionCount;
 			}
 
 			return result;
@@ -148,7 +147,7 @@ namespace Untangle.Generation
 					if (done)
 					{
 						return;
-					}
+					}				
 				}
 
 				AddEdge();
@@ -330,7 +329,7 @@ namespace Untangle.Generation
 				Vertex vertex = _availableVertices[vertexIndex];
 				if (AddEdgeEnteringVertex(vertex))
 				{
-					return;
+					return; // True
 				}
 				else
 				{
@@ -352,7 +351,7 @@ namespace Untangle.Generation
 					Vertex vertex = vertices[vertexIndex];
 					if (AddExternalEdgeEnteringVertex(firstConnectedSubgraph, vertex))
 					{
-						return;
+						return; // True
 					}
 					else
 					{
@@ -640,7 +639,7 @@ namespace Untangle.Generation
 		/// </remarks>
 		private void AddAvailableVertex(Vertex vertex)
 		{
-			if (_availableVertices.Contains(vertex))
+			if (!_availableVertices.Contains(vertex))
 			{
 				_availableVertices.Add(vertex);
 			}

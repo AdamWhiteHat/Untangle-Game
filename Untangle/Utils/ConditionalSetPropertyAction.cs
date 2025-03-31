@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.Xaml.Behaviors;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// Checks a condition property is equal to the supplied condition value.

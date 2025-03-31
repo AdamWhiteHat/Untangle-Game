@@ -8,12 +8,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Untangle.Enums;
+using Untangle.Utils;
 using System.ComponentModel;
 using Untangle.Generation;
+using System.Security.Cryptography;
 
 namespace Untangle.Core
 {
-	public class Graph : ViewModelBase
+	public class GameGraph : ViewModelBase
 	{
 		public event EventHandler VertexCollectionChanged;
 
@@ -101,24 +103,25 @@ namespace Untangle.Core
 		}
 		private Dictionary<LineSegment, HashSet<LineSegment>> _intersections;
 
-		private Graph()
+		internal GameGraph()
 		{
+			UID = "";
+			_intersectionCount = 0;
+			_vertices = new Vertex[0];
+			_lineSegments = new LineSegment[0];
+			_intersections = new Dictionary<LineSegment, HashSet<LineSegment>>();
 			_verticesList = new ObservableCollection<Vertex>();
 			_lineSegmentsList = new ObservableCollection<LineSegment>();
-
 			_verticesList.CollectionChanged += CollectionChanged_Vertices;
 			_lineSegmentsList.CollectionChanged += CollectionChanged_LineSegments;
-
-			_intersections = new Dictionary<LineSegment, HashSet<LineSegment>>();
-			IntersectionCount = 0;
 		}
 
-		public Graph(IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
+		public GameGraph(IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
 			: this(GenerateNewUID(), vertices, lineSegments)
 		{
 		}
 
-		public Graph(string uid, IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
+		public GameGraph(string uid, IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
 		{
 			UID = uid;
 
@@ -137,15 +140,6 @@ namespace Untangle.Core
 
 			CalculateAllIntersections();
 		}
-
-
-
-
-
-
-
-
-
 
 		/// <summary>
 		/// Handles the CollectionChanged event for the Vertices property.
@@ -198,10 +192,6 @@ namespace Untangle.Core
 		{
 			return System.IO.Path.GetFileNameWithoutExtension(System.IO.Path.GetRandomFileName());
 		}
-
-
-
-
 
 		/// <summary>
 		/// Adds a new, totally disconnected, vertex to the graph.
@@ -421,7 +411,7 @@ namespace Untangle.Core
 
 		protected override Freezable CreateInstanceCore()
 		{
-			return new Graph();
+			return new GameGraph();
 		}
 	}
 }

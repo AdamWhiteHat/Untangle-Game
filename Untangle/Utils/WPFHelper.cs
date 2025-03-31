@@ -5,12 +5,55 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows;
+using System.Reflection;
+using System.Windows.Data;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	public static class WPFHelper
 	{
-		public static T GetParentOfType<T>(DependencyObject element) where T : DependencyObject
+
+		public static T GetBoundPropertyValue<T>(this BindingExpression bindingExpression) where T : class
+		{
+			return GetBoundPropertyValue(bindingExpression) as T;
+		}
+
+
+		public static object GetBoundPropertyValue(this BindingExpression bindingExpression)
+		{
+			object sourceObject = bindingExpression.ResolvedSource;
+			if (sourceObject == null)
+			{
+				return null;
+			}
+
+			PropertyInfo boundProperty = GetBoundProperty(bindingExpression);
+			if (boundProperty == null)
+			{
+				return null;
+			}
+
+			object boundPropertyValue = boundProperty.GetValue(sourceObject, null);
+			return boundPropertyValue;
+		}
+		public static PropertyInfo GetBoundProperty(this BindingExpression bindingExpression)
+		{
+			object sourceObject = bindingExpression.ResolvedSource;
+			if (sourceObject == null)
+			{
+				return null;
+			}
+			string boundPropertyName = bindingExpression.ResolvedSourcePropertyName;
+
+			Type sourceObjectType = sourceObject.GetType();
+			PropertyInfo boundProperty = sourceObjectType.GetProperty(boundPropertyName);
+			return boundProperty;
+		}
+
+
+
+
+		public static T GetParentOfType<T>(this DependencyObject element) where T : DependencyObject
 		{
 			return GetParents(element).OfType<T>().FirstOrDefault();
 		}

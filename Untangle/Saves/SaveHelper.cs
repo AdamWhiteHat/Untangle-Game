@@ -52,9 +52,9 @@ namespace Untangle.Saves
 		/// <param name="game">The game to be saved.</param>
 		/// <returns><see langword="true"/> if the user has chosen to save the game and the saved
 		/// game file has been created successfully.</returns>
-		public static bool SaveGame(Game game, string fileName)
+		public static bool SaveGame(GameState game, string fileName)
 		{
-			Vertex[] vertices = game.Level.GameGraph.Vertices;
+			Vertex[] vertices = game.Graph.Vertices;
 
 			foreach (Vertex node in vertices)
 			{
@@ -64,15 +64,15 @@ namespace Untangle.Saves
 			// Create saved game objects
 			var savedGame = new SavedGame
 			{
-				UID = game.Level.GameGraph.UID,
+				UID = game.Graph.UID,
 				Version = CurrentVersion,
 				CreationDate = DateTime.Now,
 				LevelNumber = game.LevelNumber,
-				VertexCount = game.Level.GameGraph.VertexCount,
-				IntersectionCount = game.Level.GameGraph.IntersectionCount,
+				VertexCount = game.Graph.VertexCount,
+				IntersectionCount = game.Graph.IntersectionCount,
 				//Vertices = savedVertices.Values.ToArray(),
 				Vertices = vertices.ToArray(),
-				MoveCount = game.Level.MoveCount
+				MoveCount = game.MoveCount
 			};
 
 			// Save the saved game object to the specified file
@@ -93,7 +93,7 @@ namespace Untangle.Saves
 		/// -or-
 		/// The chosen saved game file was created by a newer version of the game.
 		/// </exception>
-		public static bool LoadGame(string fileName, out Game game)
+		public static bool LoadGame(string fileName, out GameState game)
 		{
 			// Load the saved game object from the specified file
 			SavedGame savedGame = LoadFromFile(fileName);
@@ -111,8 +111,7 @@ namespace Untangle.Saves
 			}
 
 			// Create the game and return it
-			GameLevel gameLevel = GameLevel.Create(savedGame.UID, savedGame.Vertices);
-			game = new Game(gameLevel, savedGame.LevelNumber);
+			game = GameState.Create(savedGame.UID, savedGame.Vertices);
 			return true;
 		}
 

@@ -17,6 +17,9 @@ using Untangle.Enums;
 using System.Windows.Media;
 using System.Numerics;
 using System.Windows.Shapes;
+using Untangle.Utils;
+using System.Drawing.Design;
+using System.Windows.Navigation;
 //using Microsoft.Msagl.Core.Geometry.Curves;
 //using Microsoft.Msagl.Drawing;
 
@@ -201,9 +204,30 @@ namespace Untangle.Core
 
 				_color = value;
 				RaisePropertyChanged();
+
+				// Set ColorIndex
+
+				Color? setColor = value.GetValue(SolidColorBrush.ColorProperty) as Color?;
+				if (setColor == null)
+				{
+					return;
+				}
+
+				List<Color> colors = ColorPalette.Default.Select(br => (Color)br.GetValue(SolidColorBrush.ColorProperty)).ToList();
+
+				int index = colors.IndexOf(setColor.Value);
+
+				if (index == -1)
+				{
+					return;
+				}
+
+				ColorIndex = index;
 			}
 		}
 		private Brush _color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 255));
+
+		
 
 		[XmlAttribute("ColorId")]
 		public int ColorIndex
@@ -223,6 +247,10 @@ namespace Untangle.Core
 			}
 		}
 		private int _colorIndex = 0;
+
+
+		[XmlIgnore]
+		public ObservableStack<HistoricalMove> HistoryStack { get; private set; }
 
 		/// <summary>
 		/// An enumeration of all vertices which are directly connected to the vertex.
@@ -309,6 +337,7 @@ namespace Untangle.Core
 		/// <param name="y">The Y coordinate of the vertex on the game field.</param>
 		public Vertex(double x, double y)
 		{
+			HistoryStack = new ObservableStack<HistoricalMove>();
 			_lineSegmentsMap = new Dictionary<Vertex, LineSegment>();
 			_state = VertexState.Normal;
 			X = x;

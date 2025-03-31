@@ -8,15 +8,18 @@
  * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
 -->
 
-<Window x:Class="Untangle.MainWindow"
-        x:Name="Window"
+<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
         xmlns:v="clr-namespace:Untangle"
+        xmlns:u="clr-namespace:Untangle.Utils"
         xmlns:vm="clr-namespace:Untangle.Core"
 		xmlns:enum="clr-namespace:Untangle.Enums"
+        
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="Untangle.MainWindow"
+        x:Name="Window"
         
         Title="{Binding Title}"
 		
@@ -31,7 +34,7 @@
         Closing="Window_Closing"		
         lex:ResxLocalizationProvider.DefaultAssembly="Untangle"
         lex:ResxLocalizationProvider.DefaultDictionary="Resources.MainWindow" 
-		Icon="/Resources/Untangle.ico"
+		Icon="..\Resources\Untangle.ico"
 		AllowsTransparency="True" 
         
         UseLayoutRounding="True"
@@ -40,8 +43,7 @@
 		WindowState="Maximized"  
 		ResizeMode="CanResizeWithGrip"
         BorderThickness="1"
-		BorderBrush="{DynamicResource windowBorderColor}"
-        
+		BorderBrush="{DynamicResource windowBorderColor}"        
 	>
 
     <Window.Resources>
@@ -64,13 +66,13 @@
                     </GeometryDrawing>
                 </DrawingBrush.Drawing>
             </DrawingBrush>
-
         </ResourceDictionary>
     </Window.Resources>
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+
     <Window.CommandBindings>
         <CommandBinding Command="ApplicationCommands.New" Executed="NewGameCommand_Executed" />
         <CommandBinding Command="ApplicationCommands.Save" Executed="SaveGameCommand_Executed" />
@@ -82,228 +84,325 @@
         <CommandBinding Command="{x:Static v:MainWindow.LanguageCommand}" Executed="LanguageCommand_Executed" />
     </Window.CommandBindings>
 
-    <Grid>
+    <Grid x:Name="gridWindow">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="27" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-
-        <Border Grid.Row="0" BorderBrush="{DynamicResource windowBorderColor}" BorderThickness="0" >
-            <Canvas Background="{DynamicResource windowTitlebarColor}"
+        <Border Grid.Row="0" BorderBrush="{DynamicResource windowBorderColor}" BorderThickness="0.5" >
+            <Grid   Background="{DynamicResource windowTitlebarColor}"
 					HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 					MouseLeftButtonDown="Canvas_MouseLeftButtonDown">
 
-                <Image x:Name="imageIcon"
-                       Source="{Binding Path=Icon}"  
-                       VerticalAlignment="Top" 
-                       HorizontalAlignment="Left"  
-                       Width="16" Height="16"
-                       Margin="7"
-                       WindowChrome.IsHitTestVisibleInChrome="True"
-                />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="26" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Canvas.Left="30">
-                    <Label x:Name="labelTitle" Content="{Binding Path=Title}"  />
-                </StackPanel>
 
-                <WrapPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Canvas.Right="1" Canvas.Top="1">
+                <Image Grid.Column="0" x:Name="imageIcon" VerticalAlignment="Center"             
+                       Width="16" Height="16" Margin="5"
+                       WindowChrome.IsHitTestVisibleInChrome="True" Source="/Views/Untangle.ico" />
+
+                <Label Grid.Column="1" x:Name="labelTitle" Content="{Binding Title}"  VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                <WrapPanel Grid.Column="2" Margin="1">
 
                     <Button x:Name="btnMinimizeWindow" 
                             Content="0"
-							Width="25" Height="23" 
+							Width="25" Height="23" Padding="0"
 							FontFamily="Marlett" FontSize="15"
 							Click="btnMinimizeWindow_Click" />
 
                     <Button x:Name="btnMaximizeWindow"
                             Content="2"
-							Width="25" Height="23" 
+							Width="25" Height="23" Padding="0"
 							FontFamily="Marlett" FontSize="15"
 							Click="btnMaximizeWindow_Click" />
 
                     <Button x:Name="btnCloseWindow"
                             Content="⨉"
-							Width="45" Height="23" 
+							Width="30" Height="23" Padding="0"
 			                FontSize="15"
 							Click="btnCloseWindow_Click" />
 
                 </WrapPanel>
 
-            </Canvas>
+            </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="125" />
-                <ColumnDefinition Width="125" />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="22" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-
-            <Menu Grid.Row="0"
-              Grid.Column="0"
-              Grid.ColumnSpan="7"
-			
-              IsMainMenu="True">
+        <Border Grid.Row="1" BorderBrush="{DynamicResource windowBorderColor}" BorderThickness="1" >
+            <Menu  IsMainMenu="True" Background="{DynamicResource windowControlColor}" Padding="2,2,0,3">
                 <MenuItem x:Name="mi_File"
-                      Header="{lex:Loc}">
+                 Header="{lex:Loc}">
                     <MenuItem x:Name="mi_NewGame" 
-                          Header="{lex:Loc}"
-                          Command="ApplicationCommands.New" />
+                     Header="{lex:Loc}"
+                     Command="ApplicationCommands.New" />
                     <Separator />
                     <MenuItem x:Name="mi_SaveGame"
-                          Header="{lex:Loc}"
-                          Command="ApplicationCommands.Save" />
+                     Header="{lex:Loc}"
+                     Command="ApplicationCommands.Save" />
                     <MenuItem x:Name="mi_LoadGame"
-                          Header="{lex:Loc}"
-                          Command="ApplicationCommands.Open" />
+                     Header="{lex:Loc}"
+                     Command="ApplicationCommands.Open" />
 
                     <Separator />
                     <MenuItem x:Name="mi_Exit"
-                          Header="{lex:Loc}"
-                          Command="ApplicationCommands.Close" />
+                     Header="{lex:Loc}"
+                     Command="ApplicationCommands.Close" />
                 </MenuItem>
                 <MenuItem x:Name="mi_Edit"
-					  Header="{lex:Loc}">
+			  Header="{lex:Loc}">
                     <MenuItem x:Name="mi_LevelBuilder"
-                          Header="Enter Level Editor"
-                          Click="MenuCommand_LevelBuilder_Click" />
+                     Header="Enter Level Editor"
+                     Click="MenuCommand_LevelBuilder_Click" />
                     <Separator />
                     <MenuItem x:Name="mi_Undo"
-						  Header="{lex:Loc}"
-						  Command="ApplicationCommands.Undo" />
+				  Header="{lex:Loc}"
+				  Command="ApplicationCommands.Undo" />
                     <MenuItem x:Name="mi_Redo"
-						  Header="{lex:Loc}"
-						  Command="ApplicationCommands.Redo" />
+				  Header="{lex:Loc}"
+				  Command="ApplicationCommands.Redo" />
                     <Separator />
                     <MenuItem x:Name="mi_ColorGraph" 
-						  Header="Get Chromatic Numbers"
-						  Click="ColorGraph_Click" />
+				  Header="Get Chromatic Numbers"
+				  Click="ColorGraph_Click" />
                     <MenuItem x:Name="mi_ColorByStartPositions"
-						  Header="Mark Vertices In Start Position"
-						  Click="mi_ColorByStartPositions_Click" />
+				  Header="Mark Vertices In Start Position"
+				  Click="mi_ColorByStartPositions_Click" />
                     <Separator />
                     <MenuItem x:Name="mi_AutoSolve" Header="Attempt Auto-Solve" Click="mi_AutoSolve_Click" />
                     <MenuItem x:Name="mi_SendVerticesToStartPositions"
-						  Header="Send Vertices To Start Pos W/O Crossings"
-						  Click="mi_SendVerticesToStartPositions_Click" />
+				  Header="Send Vertices To Start Pos W/O Crossings"
+				  Click="mi_SendVerticesToStartPositions_Click" />
+                    <Separator />
                     <MenuItem x:Name="mi_RandomizeVertices"
-                          Header="Randomize Vertices' Locations"
-                          Click="mi_RandomizeVertices_Click"
-						  Visibility="Collapsed" />
+                     Header="Randomize Vertices' Locations"
+                     Click="mi_RandomizeVertices_Click"
+				  Visibility="Collapsed" />
+                    <MenuItem x:Name="mi_RecenterAllVertices"
+                       Header="Re-center All Vertices"
+                        Click="mi_RecenterAllVertices_Click"
+                        Visibility="Collapsed" />
                 </MenuItem>
                 <MenuItem x:Name="mi_Settings"
-                      Header="{lex:Loc}">
+                 Header="{lex:Loc}">
                     <MenuItem x:Name="mi_Language"
-                          Header="{lex:Loc}"
-                          ItemsSource="{Binding LanguageManager.Languages}">
+                     Header="{lex:Loc}"
+                     ItemsSource="{Binding LanguageManager.Languages}">
                         <MenuItem.ItemContainerStyle>
-                            <Style TargetType="MenuItem">
+                            <Style TargetType="{x:Type MenuItem}">
                                 <Setter Property="Header"
-                                    Value="{Binding FriendlyName}" />
+                               Value="{Binding FriendlyName}" />
                                 <Setter Property="Command"
-                                    Value="{x:Static v:MainWindow.LanguageCommand}" />
+                               Value="{x:Static v:MainWindow.LanguageCommand}" />
                                 <Setter Property="CommandParameter"
-                                    Value="{Binding CultureName}" />
+                               Value="{Binding CultureName}" />
                                 <Setter Property="IsChecked"
-                                    Value="{Binding IsSelected}" />
+                               Value="{Binding IsSelected}" />
                             </Style>
                         </MenuItem.ItemContainerStyle>
                     </MenuItem>
                     <Separator />
                     <MenuItem x:Name="mi_Transparent" 
-						  Header="Transparent Dialog"
-						  IsCheckable="true"
-						  Click="mi_Transparent_Click"  />
+				  Header="Transparent Dialog"
+				  IsCheckable="true"
+				  Click="mi_Transparent_Click"  />
                     <MenuItem x:Name="mi_ShowGridLines" 
-						  Header="Show Grid Lines"
-						  IsCheckable="true"
-						  Click="mi_ShowGridLines_Click"  />
+				  Header="Show Grid Lines"
+				  IsCheckable="true"
+				  Click="mi_ShowGridLines_Click"  />
                     <Separator />
                     <MenuItem x:Name="mi_DebugView"
-                          Header="Debug View"
-						  IsCheckable="true"
-                          Click="mi_DebugView_Click"/>
+                     Header="Debug View"
+				  IsCheckable="true"
+                     Click="mi_DebugView_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="mi_Help"
-                      Header="{lex:Loc}">
+                 Header="{lex:Loc}">
                     <MenuItem x:Name="mi_About"
-                          Header="{lex:Loc}"
-                          Command="{x:Static v:MainWindow.AboutCommand}" />
+                     Header="{lex:Loc}"
+                     Command="{x:Static v:MainWindow.AboutCommand}" />
                 </MenuItem>
             </Menu>
+        </Border>
 
+        <Grid Grid.Row="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="125" />
+                <ColumnDefinition Width="125" />
+                <ColumnDefinition Width="61*" />
+                <ColumnDefinition Width="14*" />
+                <ColumnDefinition Width="47*"/>
+                <ColumnDefinition Width="61*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="6" BorderBrush="{DynamicResource windowBorderColor}" BorderThickness="1" >
+                <Grid Background="{DynamicResource windowControlColor}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="125" />
+                        <ColumnDefinition Width="125" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="50" />
+                    </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="1" Grid.Column="0">
-                <WrapPanel HorizontalAlignment="Right">
-                    <TextBlock x:Name="tb_Vertices" Margin="3" Text="{lex:Loc}" />
-                    <TextBlock Margin="3,3,10,3" Text="{Binding Game.Level.GameGraph.VertexCount}" />
-                </WrapPanel>
-                <WrapPanel HorizontalAlignment="Right">
-                    <TextBlock x:Name="tb_Intersections" Margin="3" Text="{lex:Loc}" />
-                    <TextBlock Margin="3,3,10,3" Text="{Binding Game.Level.GameGraph.IntersectionCount}" />
-                </WrapPanel>
-                <WrapPanel HorizontalAlignment="Right">
-                    <TextBlock x:Name="tb_Moves" Margin="3" Text="{lex:Loc}" />
-                    <TextBlock Margin="3,3,10,3" Text="{Binding Game.Level.MoveCount}" />
-                </WrapPanel>
-            </StackPanel>
+                    <Grid Grid.Row="0" Grid.Column="0" Margin="10,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-            <TextBlock x:Name="levelEditorInstructions" 
-				   Grid.Row="1" Grid.Column="4" 
-				   Grid.ColumnSpan="2" Margin="2" Padding="2">
-			<Run Text="Ctrl + Left Click : Create/Remove Edge" />
-			<LineBreak />
-			<Run Text="Alt + Left Click  : Place Vertex" />
-			<LineBreak />
-			<Run Text="Alt + Right Click : Remove Vertex" />
-			<LineBreak />
-			<Run Text="Ctrl + Shift + Left Click: Send Vertex to Start Position" />
-            </TextBlock>
+                        <TextBlock Grid.Column="0" Grid.Row="0" x:Name="tb_Vertices" Text="{lex:Loc}" HorizontalAlignment="Right" />
+                        <TextBlock  Grid.Column="1" Grid.Row="0"  Text="{Binding Game.Graph.VertexCount}" Padding="7,0" />
 
-            <StackPanel Grid.Row="1" Grid.Column="1">
-                <WrapPanel HorizontalAlignment="Right">
-                    <TextBlock Margin="3" Text="Zoom scale:" />
-                    <TextBlock Margin="3,3,10,3" Text="{Binding ScaleZoom}" />
-                </WrapPanel>
-                <WrapPanel HorizontalAlignment="Right">
-                    <TextBlock Margin="3" Text="Transparency:" />
-                    <TextBlock DataContext="{Binding RelativeSource={RelativeSource AncestorType=Window}}" x:Name="textBlockOpacity" Margin="3,3,10,3" Text="{Binding Opacity,StringFormat={}{0:0.##}}" />
-                </WrapPanel>
-            </StackPanel>
+                        <TextBlock Grid.Column="0"  Grid.Row="1" x:Name="tb_Intersections" Text="{lex:Loc}" HorizontalAlignment="Right" />
+                        <TextBlock  Grid.Column="1" Grid.Row="1" Text="{Binding Game.Graph.IntersectionCount}" Padding="7,0" />
 
-            <Border Grid.Column="6" Grid.Row="1" Grid.RowSpan="2">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" >
-                    <TextBox x:Name="textBoxDebugInfo" Height="Auto" MaxWidth="270" Width="Auto" TextWrapping="Wrap" Text="" IsUndoEnabled="False" />
-                </ScrollViewer>
+                        <TextBlock Grid.Column="0"  Grid.Row="3" x:Name="tb_Moves" Text="{lex:Loc}" HorizontalAlignment="Right" />
+                        <TextBlock  Grid.Column="1" Grid.Row="3" Text="{Binding Game.MoveCount}" Padding="7,0" />
+                    </Grid >
+
+                    <Grid Grid.Row="0" Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock  Grid.Column="0" Grid.Row="0" Text="Zoom scale:" HorizontalAlignment="Right" />
+                        <TextBlock  Grid.Column="1" Grid.Row="0" Text="{Binding ScaleZoom}" Padding="7,0" />
+
+                        <TextBlock  Grid.Column="0" Grid.Row="1" Text="Transparency:" HorizontalAlignment="Right" />
+                        <TextBlock  Grid.Column="1" Grid.Row="1" Padding="7,0" DataContext="{Binding RelativeSource={RelativeSource AncestorType={x:Type Window}}}" x:Name="textBlockOpacity" Text="{Binding Opacity, StringFormat=\{0:0.##\}}" />
+
+                    </Grid>
+
+                    <Grid  Grid.Row="0" Grid.Column="2"  x:Name="levelEditorInstructions"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" FontWeight="Bold" HorizontalAlignment="Right" Text="Ctrl + Left Click:" />
+                            <TextBlock Grid.Row="0" Grid.Column="1"  Padding="7,0" Text="Create/Remove Edge" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="Bold" HorizontalAlignment="Right" Text="Alt + Left Click:" />
+                            <TextBlock  Grid.Row="1" Grid.Column="1" Padding="7,0" Text="Place Vertex" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" FontWeight="Bold" HorizontalAlignment="Right" Text="Ctrl + Shift + Left Click:" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Padding="7,0" Text="Send Vertex to Start Position" />
+
+                        </Grid>
+                        <Grid Grid.Column="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="Bold" HorizontalAlignment="Right" Text="Alt + Right Click:" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Padding="7,0" Text="Remove Vertex" />
+
+                        </Grid>
+
+                    </Grid>
+                </Grid>
             </Border>
 
-            <Border x:Name="borderGameField" Margin="3"
-				Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6"
-				BorderBrush="Transparent" BorderThickness="2">
+            <Grid x:Name="debugView" Grid.Row="0" Grid.RowSpan="2" Grid.Column="6"
+                  Width="0"
+                  Background="{DynamicResource windowControlColor}">
 
-                <Grid x:Name="gameboardGrid" Background="Transparent" >
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" >
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <ItemsControl x:Name="ic_GameField" ItemsSource="{Binding Game.Level.GameObjects}">
+                        <ListBox x:Name="lbUndoListBox" Grid.Row="0"
+                                 MinHeight="150" Height="Auto" Width="Auto"
+                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                 Margin="4" 
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"                                 
+                                 ItemsSource="{Binding Game.UndoStack}" SelectionMode="Extended"
+                                 />
+
+                        <ListBox x:Name="lbRedoListBox" Grid.Row="1"
+                                 MinHeight="150" Height="Auto" Width="Auto" 
+                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                 Margin="4" 
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"      
+                                  ItemsSource="{Binding Game.RedoStack}" SelectionMode="Extended"
+                                 />
+
+                        <TextBox x:Name="textBoxDebugInfo" Grid.Row="2"
+                                 MinHeight="150" Height="Auto" Width="Auto"
+                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                 Margin="4" 
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"      
+                                 TextWrapping="Wrap" 
+                                 Text=""
+                                 IsUndoEnabled="False" />
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+
+            <Border x:Name="borderGameField" Margin="0" Padding="0"
+				Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="6"   	
+				BorderBrush="Black" BorderThickness="0.5">
+
+                <Grid x:Name="gameboardGrid" Background="Transparent">
+
+                    <ItemsControl x:Name="ic_GameField" ItemsSource="{Binding Game.GameObjects}" >
 
                         <ItemsControl.RenderTransform>
                             <ScaleTransform ScaleX="{Binding ScaleZoom}" ScaleY="{Binding ScaleZoom}" />
                         </ItemsControl.RenderTransform>
+                        
                         <ItemsControl.Resources>
                             <Style x:Key="vertexStyle"
-						           TargetType="Ellipse">
+						           TargetType="{x:Type Ellipse}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding State}" Value="{x:Static enum:VertexState.Normal}">
                                         <Setter Property="Fill"  Value="{Binding Color}" />
@@ -320,7 +419,7 @@
                                 </Style.Triggers>
                             </Style>
                             <Style x:Key="lineSegmentStyle"
-						           TargetType="Line">
+						           TargetType="{x:Type Line}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding State}" Value="{x:Static enum:LineSegmentState.Normal}">
                                         <Setter Property="Stroke" Value="{DynamicResource LineSegmentNormalColor}" />
@@ -345,25 +444,27 @@
                                          >
                                     <Ellipse.RenderTransform>
                                         <TransformGroup>
-                                            <TranslateTransform X="{Binding X, Mode=TwoWay}" Y="{Binding Y, Mode=TwoWay}" />
-                                            <TranslateTransform X="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
-									                            Y="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}" />
-                                            <TranslateTransform X="{Binding Size, Converter={v:MultiplicationConverter}, ConverterParameter=-0.5}"
-									                            Y="{Binding Size, Converter={v:MultiplicationConverter}, ConverterParameter=-0.5}" />
+                                            <TranslateTransform X="{Binding X, Mode=TwoWay}" 
+                                                                Y="{Binding Y, Mode=TwoWay}" />
+                                            <TranslateTransform X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+									                            Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+                                            <TranslateTransform X="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}"
+									                            Y="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}" />
                                         </TransformGroup>
                                     </Ellipse.RenderTransform>
                                 </Ellipse>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type vm:LineSegment}">
-                                <Line Style="{StaticResource lineSegmentStyle}"
+                                <Line Style="{StaticResource lineSegmentStyle}" 
 										StrokeThickness="1.5"
 										X1="{Binding Vertex1.X}"
 										Y1="{Binding Vertex1.Y}"
 										X2="{Binding Vertex2.X}"
 										Y2="{Binding Vertex2.Y}">
                                     <Line.RenderTransform>
-                                        <TranslateTransform	X="{Binding ActualWidth, Mode=OneWay, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}"
-												Y="{Binding ActualHeight, Mode=OneWay, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={v:MultiplicationConverter}, ConverterParameter=0.5}" />
+                                        <TranslateTransform
+                                                            X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+												            Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
                                     </Line.RenderTransform>
                                 </Line>
                             </DataTemplate>

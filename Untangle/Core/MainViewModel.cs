@@ -17,6 +17,7 @@ using Untangle.Generation;
 using Untangle.Resources;
 using Untangle.Saves;
 using System.Collections.Generic;
+using Untangle.Utils;
 
 namespace Untangle.Core
 {
@@ -50,7 +51,7 @@ namespace Untangle.Core
 		}
 		private bool _isDirty;
 
-		public bool IsEditing { get { return Game.Level.IsEditing; } }
+		public bool IsEditing { get { return Game.IsEditing; } }
 
 		/// <summary>
 		/// The application's language manager.
@@ -64,38 +65,46 @@ namespace Untangle.Core
 		/// <summary>
 		/// The current game of Untangle loaded in the application.
 		/// </summary>
-		public Game Game
+		public GameState Game
 		{
-			get { return _game; }
+			get { return _gamestate; }
 			set
 			{
-				if (_game == value)
+				if (_gamestate == value)
 				{
 					return;
 				}
-				if (_game != null)
+				if (_gamestate != null)
 				{
-					_game.PropertyChanged -= Game_PropertyChanged;
-					if (_game.Level != null)
-					{
-						_game.Level.LevelSolved -= Level_LevelSolved; ;
-					}
+					_gamestate.PropertyChanged -= Game_PropertyChanged;
+					_gamestate.LevelSolved -= Level_LevelSolved;
 				}
 
-				_game = value;
-				if (_game != null)
+				_gamestate = value;
+				if (_gamestate != null)
 				{
-					_game.PropertyChanged += Game_PropertyChanged;
-					if (_game.Level != null)
-					{
-						_game.Level.LevelSolved += Level_LevelSolved; ;
-					}
+					_gamestate.PropertyChanged += Game_PropertyChanged;
+					_gamestate.LevelSolved += Level_LevelSolved;
 				}
 				RaisePropertyChanged(nameof(MainViewModel.Game));
 				RaisePropertyChanged(nameof(MainViewModel.Title));
 			}
 		}
-		private Game _game;
+		private GameState _gamestate;
+
+		public int HighestLevelSolved
+		{
+			get { return _highestLevelSolved; }
+			set
+			{
+				if (value != _highestLevelSolved)
+				{
+					_highestLevelSolved = value;
+					RaisePropertyChanged();
+				}
+			}
+		}
+		private int _highestLevelSolved;
 
 		/// <summary>
 		/// The application's current title text.
@@ -129,12 +138,10 @@ namespace Untangle.Core
 		/// </summary>
 		public MainViewModel()
 		{
-			IsDirty = false;
 			_languageManager = new LanguageManager();
-
-			Game = new Game(1);
-
 			_languageManager.PropertyChanged += LanguageManager_PropertyChanged;
+			_gamestate = new GameState();
+			IsDirty = false;
 		}
 
 		public void SetBoardSize(Size size)
@@ -144,14 +151,14 @@ namespace Untangle.Core
 
 		private Size CalculateGameBoardSize()
 		{
-			double maxX = Game.Level.GameGraph.Vertices.Max(v => v.X);
-			double maxY = Game.Level.GameGraph.Vertices.Max(v => v.Y);
+			double maxX = Game.Graph.Vertices.Max(v => v.X);
+			double maxY = Game.Graph.Vertices.Max(v => v.Y);
 			return new Size(maxX, maxY);
 		}
 
 		public void AutoSolve()
 		{
-			AutoSolver.Solve(Game.Level.GameGraph, _gameBoardSize);
+			AutoSolver.Solve(Game.Graph, _gameBoardSize);
 		}
 
 		#region New/Load/Save/Edit
@@ -159,11 +166,10 @@ namespace Untangle.Core
 		/// <summary>
 		/// The initial first game to load after the application loads.
 		/// </summary>
-		public void InitialGame()
+		public void InitializeGame(Size size)
 		{
-			var levelGenerator = new LevelGenerator(2, 3, 4, 2);
-			var level = levelGenerator.GenerateLevel(_gameBoardSize);
-			Game = new Game(level, 1);
+			SetBoardSize(size);
+			Game = GameState.Create(size, 1);
 		}
 
 		/// <summary>
@@ -174,14 +180,10 @@ namespace Untangle.Core
 		/// </remarks>
 		public void NewGame(Size gameBoardSize)
 		{
-			if (!ConfirmQuit())
-			{
-				return;
-			}
-
 			_gameBoardSize = gameBoardSize;
 
-			NewLevelParameters newLevelParametersWindows = new NewLevelParameters(1 + Game.LevelNumber, 2 + Game.LevelNumber, 2, 4);
+			int levelNumber = HighestLevelSolved + 1;
+			NewLevelParameters newLevelParametersWindows = new NewLevelParameters(1 + levelNumber, 2 + levelNumber, 4, 2);
 
 			bool? dialogResult = newLevelParametersWindows.ShowDialog();
 			if (dialogResult.HasValue && dialogResult.Value == true)
@@ -194,8 +196,8 @@ namespace Untangle.Core
 					int maxEdges = newLevelParametersWindows.MaxEdges;
 
 					var levelGenerator = new LevelGenerator(rows, columns, maxEdges, minEdges);
-					var level = levelGenerator.GenerateLevel(_gameBoardSize);
-					Game = new Game(level, Game.LevelNumber);
+					Game = levelGenerator.GenerateLevel(_gameBoardSize);
+					Game.LevelNumber = levelNumber;
 				}
 				else if (newLevelParametersWindows.IsGraphNameTypeSelected)
 				{
@@ -203,8 +205,8 @@ namespace Untangle.Core
 
 					Generation.Vertex[] vertices = CriticalNonplanarGraphs.GenerateLevel(graphIndex);
 
-					GameLevel gameLevel = GameLevel.Create(_gameBoardSize, vertices);
-					Game = new Game(gameLevel, graphIndex);
+					Game = GameState.Create(_gameBoardSize, vertices);
+					Game.LevelNumber = levelNumber;
 				}
 				IsDirty = false;
 			}
@@ -218,21 +220,13 @@ namespace Untangle.Core
 		/// </remarks>
 		public bool LoadGame(string fileName)
 		{
-			if (!ConfirmQuit())
-			{
-				return false;
-			}
-
-			Game.Level.ExitEditMode();
-
 			try
 			{
-				Game game;
+				GameState game;
 				if (!SaveHelper.LoadGame(fileName, out game))
 				{
 					return false;
 				}
-
 				Game = game;
 
 				if (_gameBoardSize == Size.Empty)
@@ -262,8 +256,6 @@ namespace Untangle.Core
 		{
 			try
 			{
-				Game.Level.ExitEditMode();
-
 				if (SaveHelper.SaveGame(Game, fileName))
 				{
 					if (showSuccessMessage)
@@ -282,37 +274,20 @@ namespace Untangle.Core
 			return false;
 		}
 
-		/// <summary>
-		/// Toggles the level editor.
-		/// </summary>
-		public void ToggleLevelEditor()
-		{
-			if (!Game.Level.IsEditing)
-			{
-				if (!ConfirmQuit())
-				{
-					return;
-				}
-				Game.Level.EnterEditMode();
-			}
-			else
-			{
-				Game.Level.ExitEditMode();
-			}
-		}
-
 		#endregion
 
 		#region Solved/Quit methods
 
 		/// <summary>
-		/// Handles the <see cref="GameLevel.LevelSolved"/> event of the current game level.
+		/// Handles the <see cref="GameState.LevelSolved"/> event of the current game level.
 		/// </summary>
 		private void Level_LevelSolved(object sender, EventArgs e)
 		{
+			HighestLevelSolved = Math.Max(HighestLevelSolved, Game.LevelNumber);
+
 			MessageBoxResult mboxResult =
 				MessageBox.Show(
-					string.Format(Messages.LevelSolved, Game.LevelNumber, Game.Level.MoveCount)
+					string.Format(Messages.LevelSolved, Game.LevelNumber, Game.MoveCount)
 						+ Environment.NewLine
 						+ "Begin next level?",
 					Application.Current.MainWindow.Title,
@@ -326,38 +301,8 @@ namespace Untangle.Core
 				}
 
 				IsDirty = false;
-				Game.LevelNumber++;
 				NewGame(_gameBoardSize);
 			}
-		}
-
-		/// <summary>
-		/// Displays a save game prompt when the user is about to lose his current game progress, if needed.
-		/// </summary>
-		/// <returns>
-		/// <see langword="true"/> if the current operationa should proceed, possibly losing game state.
-		/// This happens either when there is no unsaved game state (IsDirty flag is false), or the user has indicated they do not care.
-		/// <see langword="true"/> if the current operation should abort, preserving the current game state.
-		/// </returns>
-		/// <remarks>
-		/// <para>The save game prompt is not needed if the user has not dragged any vertices since
-		/// the game was started or last saved.</para>
-		/// </remarks>
-		public bool ConfirmQuit()
-		{
-			if (!IsDirty)
-			{
-				return true;
-			}
-
-			MessageBoxResult result =
-				MessageBox.Show(
-					Messages.SaveGamePrompt,
-					MessageCaptions.SaveGamePrompt,
-					MessageBoxButton.YesNo,
-					MessageBoxImage.Warning);
-
-			return (result == MessageBoxResult.Yes);
 		}
 
 		#endregion
@@ -372,16 +317,16 @@ namespace Untangle.Core
 		/// pressed.</param>
 		public void HandleMouseMove(Point position, bool buttonPressed)
 		{
-			if (Game.Level.IsDragging)
+			if (Game.IsDragging)
 			{
 				if (buttonPressed)
 				{
-					Game.Level.ContinueDrag(position);
+					Game.ContinueDrag(position);
 				}
 				else
 				{
 					IsDirty = true;
-					Game.Level.FinishDrag();
+					Game.FinishDrag();
 				}
 			}
 		}
@@ -391,14 +336,14 @@ namespace Untangle.Core
 		/// </summary>
 		public void HandleMouseUp(Point position, bool keyModifier)
 		{
-			if (Game.Level.IsDragging)
+			if (Game.IsDragging)
 			{
 				IsDirty = true;
-				Game.Level.FinishDrag();
+				Game.FinishDrag();
 			}
-			else if (Game.Level.IsEditing && keyModifier)
+			else if (Game.IsEditing && keyModifier)
 			{
-				Game.Level.Edit_CreateVertex(position);
+				Game.Edit_CreateVertex(position);
 			}
 		}
 
@@ -409,7 +354,7 @@ namespace Untangle.Core
 		/// </param>
 		public void HandleVertexMouseEnter(Vertex vertex)
 		{
-			Game.Level.SetVertexUnderMouse(vertex);
+			Game.SetVertexUnderMouse(vertex);
 		}
 
 		/// <summary>
@@ -418,7 +363,7 @@ namespace Untangle.Core
 		/// <param name="vertex">The vertex whose area has been left by the mouse cursor.</param>
 		public void HandleVertexMouseLeave()
 		{
-			Game.Level.SetVertexUnderMouse(null);
+			Game.SetVertexUnderMouse(null);
 		}
 
 		/// <summary>
@@ -431,20 +376,20 @@ namespace Untangle.Core
 		{
 			if (button == MouseButton.Left)
 			{
-				if (Game.Level.IsEditing && keyModifier == ModifierKeys.Control)
+				if (Game.IsEditing && keyModifier == ModifierKeys.Control)
 				{
-					Game.Level.Edit_JoinVertexSelect(vertex);
+					Game.Edit_JoinVertexSelect(vertex);
 				}
 				else
 				{
-					Game.Level.StartDrag(vertex);
+					Game.StartDrag(vertex);
 				}
 			}
 			else if (button == MouseButton.Right)
 			{
-				if (Game.Level.IsEditing && keyModifier == ModifierKeys.Alt)
+				if (Game.IsEditing && keyModifier == ModifierKeys.Alt)
 				{
-					Game.Level.Edit_DeleteVertex(vertex);
+					Game.Edit_DeleteVertex(vertex);
 				}
 			}
 		}

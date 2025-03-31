@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// Provides Throttle() method.

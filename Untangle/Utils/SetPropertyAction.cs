@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.Xaml.Behaviors;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// Sets the designated property to the supplied value. TargetObject

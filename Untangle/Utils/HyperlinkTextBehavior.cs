@@ -16,7 +16,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Navigation;
 
-namespace Untangle
+namespace Untangle.Utils
 {
 	/// <summary>
 	/// A WPF behavior class used to process resource strings containing hyperlink tags which must
