@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LevelSolved" xml:space="preserve">
-    <value>You just solved level {0} in {1} moves. Congratulations!</value>
+    <value>You just solved level {0}! It took you {1} moves and {2} seconds. Congratulations!</value>
   </data>
   <data name="SaveGamePrompt" xml:space="preserve">
     <value>You have unsaved changes. Are you sure you want to quit?

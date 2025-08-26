@@ -9,14 +9,15 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using System.ComponentModel;
+using Untangle.Core.Achievements;
 using Untangle.Generation;
 using Untangle.Resources;
 using Untangle.Saves;
-using System.Collections.Generic;
 using Untangle.Utils;
 
 namespace Untangle.Core
@@ -32,7 +33,42 @@ namespace Untangle.Core
 		/// <summary>
 		/// Size of the game board. For restricting randomizing vertex positions.
 		/// </summary>
-		internal Size _gameBoardSize = Size.Empty;
+		public Size GameBoardSize
+		{
+			get
+			{
+				return _gameBoardSize;
+			}
+			set
+			{
+				if (value != _gameBoardSize)
+				{
+					_gameBoardSize = value;
+					RaisePropertyChanged(nameof(GameBoardSize));
+
+					Point center = new Point(_gameBoardSize.Width / 2, _gameBoardSize.Height / 2);
+					GameBoardCenter = center;
+				}
+			}
+		}
+		private Size _gameBoardSize = Size.Empty;
+
+		public Point GameBoardCenter
+		{
+			get
+			{
+				return _gameBoardCenter;
+			}
+			set
+			{
+				if (value != _gameBoardCenter)
+				{
+					_gameBoardCenter = value;
+					RaisePropertyChanged(nameof(GameBoardCenter));
+				}
+			}
+		}
+		private Point _gameBoardCenter = new Point(0, 0);
 
 		/// <summary>
 		/// Indicates if the game state has changed since the last save.
@@ -92,6 +128,23 @@ namespace Untangle.Core
 		}
 		private GameState _gamestate;
 
+		/// <summary>
+		/// The best score information for the currently loaded game board.
+		/// </summary>
+		public Score BestScore
+		{
+			get { return _bestScore; }
+			set
+			{
+				if (value != _bestScore)
+				{
+					_bestScore = value;
+					RaisePropertyChanged(nameof(MainViewModel.BestScore));
+				}
+			}
+		}
+		private Score _bestScore;
+
 		public int HighestLevelSolved
 		{
 			get { return _highestLevelSolved; }
@@ -146,8 +199,10 @@ namespace Untangle.Core
 
 		public void SetBoardSize(Size size)
 		{
-			_gameBoardSize = size;
+			GameBoardSize = size;
 		}
+
+
 
 		private Size CalculateGameBoardSize()
 		{
@@ -158,7 +213,7 @@ namespace Untangle.Core
 
 		public void AutoSolve()
 		{
-			AutoSolver.Solve(Game.Graph, _gameBoardSize);
+			AutoSolver.Solve(Game.Graph, GameBoardSize);
 		}
 
 		#region New/Load/Save/Edit
@@ -180,7 +235,7 @@ namespace Untangle.Core
 		/// </remarks>
 		public void NewGame(Size gameBoardSize)
 		{
-			_gameBoardSize = gameBoardSize;
+			GameBoardSize = gameBoardSize;
 
 			int levelNumber = HighestLevelSolved + 1;
 			NewLevelParameters newLevelParametersWindows = new NewLevelParameters(1 + levelNumber, 2 + levelNumber, 4, 2);
@@ -196,7 +251,7 @@ namespace Untangle.Core
 					int maxEdges = newLevelParametersWindows.MaxEdges;
 
 					var levelGenerator = new LevelGenerator(rows, columns, maxEdges, minEdges);
-					Game = levelGenerator.GenerateLevel(_gameBoardSize);
+					Game = levelGenerator.GenerateLevel(GameBoardSize);
 					Game.LevelNumber = levelNumber;
 				}
 				else if (newLevelParametersWindows.IsGraphNameTypeSelected)
@@ -205,7 +260,7 @@ namespace Untangle.Core
 
 					Generation.Vertex[] vertices = CriticalNonplanarGraphs.GenerateLevel(graphIndex);
 
-					Game = GameState.Create(_gameBoardSize, vertices);
+					Game = GameState.Create(GameBoardSize, vertices);
 					Game.LevelNumber = levelNumber;
 				}
 				IsDirty = false;
@@ -229,9 +284,9 @@ namespace Untangle.Core
 				}
 				Game = game;
 
-				if (_gameBoardSize == Size.Empty)
+				if (GameBoardSize == Size.Empty)
 				{
-					_gameBoardSize = CalculateGameBoardSize();
+					GameBoardSize = CalculateGameBoardSize();
 				}
 
 				IsDirty = false;
@@ -264,7 +319,8 @@ namespace Untangle.Core
 					}
 					IsDirty = false;
 					return true;
-				};
+				}
+				;
 			}
 			catch (Exception ex)
 			{
@@ -287,7 +343,7 @@ namespace Untangle.Core
 
 			MessageBoxResult mboxResult =
 				MessageBox.Show(
-					string.Format(Messages.LevelSolved, Game.LevelNumber, Game.MoveCount)
+					string.Format(Messages.LevelSolved, Game.LevelNumber, Game.MoveCount, Game.SecondsElapsed)
 						+ Environment.NewLine
 						+ "Begin next level?",
 					Application.Current.MainWindow.Title,
@@ -295,13 +351,13 @@ namespace Untangle.Core
 
 			if (mboxResult == MessageBoxResult.Yes)
 			{
-				if (_gameBoardSize == Size.Empty)
+				if (GameBoardSize == Size.Empty)
 				{
-					_gameBoardSize = CalculateGameBoardSize();
+					GameBoardSize = CalculateGameBoardSize();
 				}
 
 				IsDirty = false;
-				NewGame(_gameBoardSize);
+				NewGame(GameBoardSize);
 			}
 		}
 

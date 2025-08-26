@@ -309,6 +309,16 @@ namespace Untangle.Core
 		[XmlIgnore]
 		public bool AtStartPosition { get { return (StartingPosition.HasValue) ? (X == StartingPosition.Value.X && Y == StartingPosition.Value.Y) : false; } }
 
+
+		[XmlIgnore]
+		public Point? SolvedPosition { get; set; }
+
+		[XmlIgnore]
+		public bool AtSolvedPosition { get { return (SolvedPosition.HasValue) ? (X == SolvedPosition.Value.X && Y == SolvedPosition.Value.Y) : false; } }
+
+
+
+
 		public string Name { get { return $"Vertex_{Id}"; } }
 
 		/// <summary>

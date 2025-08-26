@@ -73,7 +73,6 @@ namespace Untangle
 			this.AllowsTransparency = true;
 			_viewModel = (MainViewModel)DataContext;
 
-			textBlockOpacity.DataContext = this;
 			imageIcon.DataContext = this;
 
 			debugView.Width = 0;
@@ -81,7 +80,7 @@ namespace Untangle
 			levelEditorInstructions.Visibility = Visibility.Hidden;
 
 			ic_GameField.SizeChanged += Ic_GameField_SizeChanged;
-			ic_GameField.ClipToBounds = true;
+			ic_GameField.ClipToBounds = false;
 			ic_GameField.UseLayoutRounding = true;
 
 			this.Loaded += MainWindow_Loaded;
@@ -385,10 +384,11 @@ namespace Untangle
 
 				if (e.ChangedButton == MouseButton.Left && keyModifier.HasFlag(ModifierKeys.Control) && keyModifier.HasFlag(ModifierKeys.Shift))
 				{
-					if (!vertex.AtStartPosition)
-					{
-						SendVertexToStartingPosition(vertex);
-					}
+					SendVertexToStartingPosition(vertex);
+				}
+				else if (e.ChangedButton == MouseButton.Left && keyModifier.HasFlag(ModifierKeys.Alt) && keyModifier.HasFlag(ModifierKeys.Shift))
+				{
+					SendVertexToSolvedPosition(vertex);
 				}
 				else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right)
 				{
@@ -609,6 +609,25 @@ namespace Untangle
 			AnimateVertexMovement(vertex, fromPoint, toPoint);
 		}
 
+		public void SendVertexToSolvedPosition(Vertex vertex)
+		{
+			if (!vertex.SolvedPosition.HasValue)
+			{
+				return;
+			}
+
+			if (vertex.AtSolvedPosition)
+			{
+				return;
+			}
+
+			Point fromPoint = vertex.GetPosition();
+			Point toPoint = vertex.SolvedPosition.Value;
+			ViewModel.Game.AddMoveToHistory(vertex, fromPoint, toPoint);
+
+			AnimateVertexMovement(vertex, fromPoint, toPoint);
+		}
+
 		private void AnimateVertexMovement(Vertex vertex, Point from, Point to)
 		{
 			DoubleAnimation xAnimation = new DoubleAnimation(from.X, to.X, ViewModelBase.Animation_Duration, FillBehavior.HoldEnd) { EasingFunction = ViewModelBase.Animation_EasingFunction, AutoReverse = false };
@@ -669,6 +688,7 @@ namespace Untangle
 				borderGameField.BorderBrush = Brushes.Red;
 				levelEditorInstructions.Visibility = Visibility.Visible;
 				mi_RandomizeVertices.Visibility = Visibility.Visible;
+				mi_ReScaleVertices.Visibility = Visibility.Visible;
 				mi_RecenterAllVertices.Visibility = Visibility.Visible;
 			}
 			else
@@ -677,6 +697,7 @@ namespace Untangle
 				borderGameField.SetResourceReference(Border.BorderBrushProperty, "windowBorderColor");
 				levelEditorInstructions.Visibility = Visibility.Hidden;
 				mi_RandomizeVertices.Visibility = Visibility.Collapsed;
+				mi_ReScaleVertices.Visibility = Visibility.Collapsed;
 				mi_RecenterAllVertices.Visibility = Visibility.Collapsed;
 			}
 		}
@@ -713,10 +734,24 @@ namespace Untangle
 			UpdateDebugOutput();
 		}
 
+		private void mi_SetVerticesSolvePositions_Click(object sender, RoutedEventArgs e)
+		{
+			foreach (Vertex vertex in ViewModel.Game.Graph.Vertices)
+			{
+				vertex.SolvedPosition = vertex.GetPosition();
+			}
+		}
+
 		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
 		{
 			ViewModel.Game.Edit_RandomizeVertices(ic_GameField.RenderSize);
 			UpdateDebugOutput();
+		}
+
+		private void mi_ReScaleVertices_Click(object sender, RoutedEventArgs e)
+		{
+			double scale = (double)ViewModel.ScaleZoom;
+			ViewModel.Game.Edit_RescaleAllVertices(scale);
 		}
 
 		private void mi_RecenterAllVertices_Click(object sender, RoutedEventArgs e)
@@ -943,6 +978,5 @@ namespace Untangle
 				}
 			}
 		}
-
 	}
 }

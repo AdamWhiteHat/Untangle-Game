@@ -23,6 +23,9 @@ using System.Windows.Threading;
 using Microsoft.Msagl.Core.DataStructures;
 using System.Collections.ObjectModel;
 using Microsoft.Msagl.Core.Geometry.Curves;
+using System.Windows.Forms;
+using System.Timers;
+using System.Threading;
 
 namespace Untangle.Core
 {
@@ -140,7 +143,64 @@ namespace Untangle.Core
 		private int _moveCount;
 
 		/// <summary>
-		/// The current game level's number.
+		/// A counter of the number of seconds that have elapsed since the game was last solved.
+		/// </summary>
+		public int SecondsElapsed
+		{
+			get { return _secondsElapsed; }
+			set
+			{
+				if (_secondsElapsed == value)
+				{
+					return;
+				}
+
+				_secondsElapsed = value;
+				RaisePropertyChanged(nameof(SecondsElapsed));
+			}
+		}
+		private int _secondsElapsed;
+
+		private System.Windows.Forms.Timer SecondsElapsedTimer = null;
+
+		public bool HasGameStarted
+		{
+			get { return _hasGameStarted; }
+			set
+			{
+				if (_hasGameStarted == value)
+				{
+					return;
+				}
+
+				_hasGameStarted = value;
+				RaisePropertyChanged();
+			}
+		}
+		private bool _hasGameStarted = false;
+
+		/// <summary>
+		/// A counter of the number of times this game board has been solved.
+		/// </summary>
+		public int SolveCount
+		{
+			get { return _solveCount; }
+			set
+			{
+				if (_solveCount == value)
+				{
+					return;
+				}
+
+				_solveCount = value;
+				RaisePropertyChanged();
+			}
+		}
+		private int _solveCount;
+
+		/// <summary>
+		/// The current game level's number, which serves to represent a game's approximate difficulty level.
+		/// Many distinct games can have the same LevelNumber.
 		/// </summary>
 		public int LevelNumber
 		{
@@ -207,11 +267,32 @@ namespace Untangle.Core
 			_isEditing = false;
 			_levelNumber = 1;
 			_gameGraph = new GameGraph();
+
+			MoveCount = 0;
+			SecondsElapsed = 0;
+			HasGameStarted = false;
+
+			if (SecondsElapsedTimer != null)
+			{
+				SecondsElapsedTimer.Tick -= SecondsElapsedTimer_Tick;
+				SecondsElapsedTimer.Stop();
+				SecondsElapsedTimer.Dispose();
+			}
+			SecondsElapsedTimer = new System.Windows.Forms.Timer();
+			SecondsElapsedTimer.Enabled = false;
+			SecondsElapsedTimer.Interval = 1000;
+			SecondsElapsedTimer.Tick += SecondsElapsedTimer_Tick;
+
 			ClearAllTempVars();
 			ClearUndoRedoHistory();
 		}
 
-		public GameState(GameGraph gameGraph)
+		private void SecondsElapsedTimer_Tick(object sender, EventArgs e)
+		{
+			SecondsElapsed += 1;
+		}
+
+		private GameState(GameGraph gameGraph)
 			: this()
 		{
 			Graph = gameGraph;
@@ -395,6 +476,11 @@ namespace Untangle.Core
 			GraphLayout.SelectRandomLayout(Graph, size);
 		}
 
+		public void Edit_RescaleAllVertices(double scale)
+		{
+			GraphLayout.ReScaleAllVertices(Graph, scale);
+		}
+
 		public void Edit_RecenterVertices(System.Windows.Size size)
 		{
 			GraphLayout.RecenterVertices(Graph, size);
@@ -542,6 +628,11 @@ namespace Untangle.Core
 				Graph.RecalculateIntersections(_draggedVertex);
 
 				_draggedVertex = null;
+				if (!HasGameStarted)
+				{
+					HasGameStarted = true;
+					SecondsElapsedTimer.Start();
+				}
 				RaisedPlayerMoved();
 			}
 
@@ -850,6 +941,24 @@ namespace Untangle.Core
 			HistoricalMove currentMove = new HistoricalMove(Graph.UID, vertex, from, to);
 			UndoStack.Push(currentMove);
 
+			var toDelete = RedoStack.Where(mv => mv.Vertex == vertex).ToList();
+
+			if (toDelete.Any())
+			{
+				int count = toDelete.Count;
+				int index = -1;
+
+				while (++index < count)
+				{
+					RedoStack.Remove(toDelete[index]);
+				}
+
+				foreach (var move in toDelete)
+				{
+					move.DeleteSelf();
+				}
+			}
+
 			HistoricalMove lastMove = currentMove.Vertex.HistoryStack.Peek();
 
 			if (lastMove != null)
@@ -961,6 +1070,7 @@ namespace Untangle.Core
 			{
 				if (Graph.IntersectionCount == 0)
 				{
+					SecondsElapsedTimer.Stop();
 					RaiseLevelSolved();
 					return true;
 				}

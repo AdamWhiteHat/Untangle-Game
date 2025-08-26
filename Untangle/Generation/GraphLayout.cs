@@ -1,4 +1,5 @@
 ﻿using Microsoft.Msagl.Core.Geometry.Curves;
+using Microsoft.Msagl.Drawing;
 using Microsoft.Msagl.GraphmapsWithMesh;
 using System;
 using System.Collections.Generic;
@@ -203,6 +204,29 @@ namespace Untangle.Generation
 
 				verticesToScramble.RemoveAt(vertexIndex);
 				i++;
+			}
+
+			graph.CalculateAllIntersections();
+			return graph.IntersectionCount;
+		}
+
+		public static int ReScaleAllVertices(GameGraph graph, double scale)
+		{
+			Core.Vertex[] vertices = graph.Vertices;
+
+			int index = 0;
+			int maxIndex = graph.VertexCount;
+			while (index < maxIndex)
+			{
+				Core.Vertex vertex = vertices[index];
+
+				System.Windows.Point pos = vertex.GetPosition();
+				pos.X *= scale;
+				pos.Y *= scale;
+				vertex.SetPosition(pos);
+				vertex.StartingPosition = pos;
+
+				index++;
 			}
 
 			graph.CalculateAllIntersections();

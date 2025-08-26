@@ -21,13 +21,20 @@ namespace Untangle.Saves
 	{
 		/// <summary>
 		/// The saved game's version number.
+		/// Used to determine compatibility with saved games created by earlier versions of the game.
+		/// When making incompatible save file changes, increment the CurrentVersion number in <see cref="SaveHelper"/>.
 		/// </summary>
 		/// <remarks>
-		/// <para>A saved game's version number can be used to ensure compatibility with saved
-		/// games created by earlier versions of the game.</para>
+		/// <para>The saved game's version number.</para>
 		/// </remarks>
 		[XmlAttribute]
-		public int Version { get; set; }
+		public float Version { get; set; }
+
+		/// <summary>
+		/// The SaveSame Unique Identification String
+		/// </summary>
+		[XmlElement]
+		public string UID { get; set; }
 
 		/// <summary>
 		/// The saved game's creation date and time.
@@ -58,12 +65,6 @@ namespace Untangle.Saves
 		/// </summary>
 		[XmlElement]
 		public int MoveCount { get; set; }
-
-		/// <summary>
-		/// The number of moves made in current saved game.
-		/// </summary>
-		[XmlElement]
-		public string UID { get; set; }
 
 		/// <summary>
 		/// An array containing all vertices in the saved game's current level.

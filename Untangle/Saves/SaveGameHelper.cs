@@ -8,20 +8,23 @@
  * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
  */
 
-using System;
-using System.IO;
-using System.Xml;
-using System.Linq;
-using System.Text;
 using Microsoft.Win32;
-using System.IO.Pipes;
-using System.Xml.Linq;
-using System.IO.Compression;
-using System.Xml.Serialization;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.IO.Pipes;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Untangle.Resources;
+using System.Text;
+using System.Windows.Controls;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Serialization;
+using System.Xml.XPath;
 using Untangle.Core;
+using Untangle.Resources;
 
 namespace Untangle.Saves
 {
@@ -33,12 +36,13 @@ namespace Untangle.Saves
 		/// <summary>
 		/// The game's current version number.
 		/// </summary>
-		private const int CurrentVersion = 3;
+		private const float CurrentVersion = 4.0f;
 
 		/// <summary>
 		/// The XML element name of the element containing the validation hash of a saved game.
 		/// </summary>
 		private const string HashElementName = "Hash";
+		private const string HashExcludeAttributeName = "ExcludeFromHash";
 
 
 		private static string[] HashBypassValues = new string[]
@@ -139,8 +143,8 @@ namespace Untangle.Saves
 			}
 
 			// Compute hash on the raw saved game XML document and append it to the document
-			string base64Hash = GetSavedGameHash(savedGameXml);
-			var hashElement = new XElement(HashElementName, base64Hash);
+
+			XElement hashElement = ConstructHashElement(GetSavedGameHash(savedGameXml));
 			savedGameXml.Root.Add(hashElement);
 
 			savedGameXml.Save(fileName, SaveOptions.None);
@@ -175,7 +179,6 @@ namespace Untangle.Saves
 				throw new Exception(ExceptionMessages.DamagedSavedGame);
 			}
 			string savedHash = hashElement.Value;
-			hashElement.Remove();
 
 			if (!HashBypassValues.Contains(savedHash))
 			{
@@ -191,12 +194,10 @@ namespace Untangle.Saves
 			SavedGame result = null;
 			try
 			{
-				using (var stream = new MemoryStream())
+				using (XmlReader reader = savedGameXml.CreateReader())
 				{
-					savedGameXml.Save(stream, SaveOptions.DisableFormatting);
-					stream.Position = 0;
 					XmlSerializer xmlSerializer = new XmlSerializer(typeof(SavedGame));
-					result = (SavedGame)xmlSerializer.Deserialize(stream);
+					result = (SavedGame)xmlSerializer.Deserialize(reader);
 				}
 			}
 			catch (Exception ex)
@@ -214,17 +215,98 @@ namespace Untangle.Saves
 		/// <returns>The base-64 encoded SHA1 hash of the raw saved game XML document.</returns>
 		private static string GetSavedGameHash(XDocument savedGameXml)
 		{
-			return GetStringHash(savedGameXml.ToString(SaveOptions.DisableFormatting));
+			// First, create a deep clone of the document so we can modify it without modifying the original)
+			XDocument clone = XDocument.Load(savedGameXml.CreateReader());
+
+			// Select all elements that have the 'exclude from hashing' attribute.
+			// Examples of elements that should be excluded from hashing include the element that holds the hashing result.
+			IEnumerable<object> matches = ((IEnumerable<object>)clone.XPathEvaluate($"//*[@{HashExcludeAttributeName}='true']"));
+
+			if (matches.Any())
+			{
+				IEnumerable<XElement> matchingElements = matches.Cast<XElement>();
+				// And remove them from the document (so they dont participate in the hash)
+				foreach (XElement element in matchingElements)
+				{
+					element.Remove();
+				}
+			}
+
+			// Old way of removing hash element
+			//XElement hashElement = clone.Root.Element(HashElementName);
+			//if (hashElement != null)
+			//{
+			//	hashElement.Remove();
+			//}
+
+			// Now, hash the remainder of the document.
+			return GetStringHash(clone.ToString(SaveOptions.DisableFormatting));
+		}
+
+		private static XElement ConstructHashElement(string hashValue)
+		{
+			XElement result = new XElement(HashElementName, hashValue);
+			// Add an attribute that excludes the element from participating in the hash.
+			// For SHA256, it is an open problem as to how to construct a hash which includes a copy of itself in the hashing data.
+			// And finding one via brute force is computationally infeasible.
+			// Look, we are just trying to write a game here, not solve unanswered questions in mathematics and cryptography.
+			result.SetAttributeValue(HashExcludeAttributeName, "true");
+			return result;
 		}
 
 		private static string GetStringHash(string text)
 		{
-			byte[] savedGameBytes = Encoding.UTF8.GetBytes(text);
+			string result = string.Empty;
 			using (SHA256 sha = SHA256.Create())
 			{
+				byte[] savedGameBytes = Encoding.UTF8.GetBytes(text);
 				byte[] hash = sha.ComputeHash(savedGameBytes);
-				return Convert.ToBase64String(hash, Base64FormattingOptions.None);
+				result = Convert.ToBase64String(hash, Base64FormattingOptions.None);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// If its possible to automatically upgrade a save file from one version to the next higher version
+		/// using a series of string search and replacements, moving data from one data structure to another, or by whatever means,
+		/// go ahead and add a clause to handle that here, ensuring to set the version converted to and returning true at the end of your clause.
+		/// Note: Its required only to support upgrading from one version to the next higher version.
+		/// Support for upgrading from one version to another (higher) arbitrary version can be done automatically by
+		/// calling this method repeatedly until the desired version is achieved or the method returns false.
+		/// Only return true if an upgrade was performed successfully and to completion.
+		/// Return false if no upgrade path is possible or save file is already at the latest version.
+		/// Throw an exception if an upgrade was attempted or began, but an error was encountered 
+		/// </summary>
+		/// <param name="fileText">The save file contents as a string. Upgrading will modify this value.</param>
+		/// <param name="fromVersion">The version of the file who's contents are being passed in.
+		/// The upgrade process that is selected is based on this value.</param>
+		/// <param name="toVersion"></param>		
+		/// <returns>True if an upgrade was possible and the upgrade was performed.</returns>
+		private static bool AutomaticSaveFileUpgrade(ref string fileText, float fromVersion, out float toVersion)
+		{
+			if (string.IsNullOrWhiteSpace(fileText))
+			{
+				toVersion = NotSupportedVersion;
+				return false;
+			}
+			else if (fromVersion < 3f)
+			{
+				toVersion = NotSupportedVersion;
+				return false;
+			}
+			else if (fromVersion == 3f)
+			{
+				fileText = fileText.Replace("<Hash>", "<Hash ExcludeFromHash=\"true\">");
+				fileText = fileText.Replace("<SavedGame Version=\"3\" ", "<SavedGame Version=\"4.0\" ");
+				toVersion = 4.0f;
+				return true;
+			}
+			else
+			{
+				toVersion = NotSupportedVersion;
+				return false;
 			}
 		}
+		private const float NotSupportedVersion = float.NaN;
 	}
 }

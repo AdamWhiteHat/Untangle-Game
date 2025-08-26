@@ -168,4 +168,22 @@
   <data name="mi_LevelBuilder_Header" xml:space="preserve">
     <value>Level _Builder</value>
   </data>
+  <data name="tb_Zoom" xml:space="preserve">
+    <value>Zoom:</value>
+  </data>
+  <data name="tb_Opacity" xml:space="preserve">
+    <value>Opacity:</value>
+  </data>
+  <data name="tb_Time" xml:space="preserve">
+    <value>Time:</value>
+  </data>
+  <data name="tb_BestTime" xml:space="preserve">
+    <value>Best Time:</value>
+  </data>
+  <data name="tb_BestMoves" xml:space="preserve">
+    <value>Best Moves:</value>
+  </data>
+  <data name="tb_ScoreBoard" xml:space="preserve">
+    <value>~ Score Board ~</value>
+  </data>
 </root>

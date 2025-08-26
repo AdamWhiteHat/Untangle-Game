@@ -24,9 +24,13 @@ namespace Untangle.Core
 		public event EventHandler IntersectionCollectionChanged;
 
 		/// <summary>
-		/// A unique ID value generated for each new game.
-		/// Primarily used when applying automated moves to a level
-		/// to prevent applying moves to the wrong game board.
+		/// A unique ID value generated once for a brand new board, but then is forever associated with that game board.
+		/// The UID stays with the game board when it is saved and loaded from a file.
+		/// Used to associate other structures with this bored, which would not make sense or would be an error 
+		/// if it were applied to a different game board. These include things like:
+		/// - High scores achieved playing on this board.
+		/// - Undo and redo  queues.
+		/// - A series of move instructions for vertices.
 		/// </summary>
 		public string UID { get; private set; }
 
