@@ -12,6 +12,7 @@ using Untangle.Utils;
 using System.ComponentModel;
 using Untangle.Generation;
 using System.Security.Cryptography;
+using System.Windows.Shapes;
 
 namespace Untangle.Core
 {
@@ -78,6 +79,9 @@ namespace Untangle.Core
 
 		private ObservableCollection<LineSegment> _lineSegmentsList;
 
+
+		public ObservableCollection<NonInteractiveLine> NonInteractiveLines = new ObservableCollection<NonInteractiveLine>();
+
 		/// <summary>
 		/// The number of intersections remaining in the game level.
 		/// </summary>
@@ -118,6 +122,7 @@ namespace Untangle.Core
 			_lineSegmentsList = new ObservableCollection<LineSegment>();
 			_verticesList.CollectionChanged += CollectionChanged_Vertices;
 			_lineSegmentsList.CollectionChanged += CollectionChanged_LineSegments;
+			NonInteractiveLines.CollectionChanged += NonInteractiveLines_CollectionChanged;
 		}
 
 		public GameGraph(IEnumerable<Vertex> vertices, IEnumerable<LineSegment> lineSegments)
@@ -134,6 +139,8 @@ namespace Untangle.Core
 
 			_verticesList.CollectionChanged += CollectionChanged_Vertices;
 			_lineSegmentsList.CollectionChanged += CollectionChanged_LineSegments;
+
+			NonInteractiveLines.CollectionChanged += NonInteractiveLines_CollectionChanged;
 
 			_intersections = new Dictionary<LineSegment, HashSet<LineSegment>>();
 			foreach (LineSegment lineSegment in _lineSegmentsList)
@@ -165,6 +172,11 @@ namespace Untangle.Core
 		private void CollectionChanged_LineSegments(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			_lineSegments = null;
+			RaiseLineSegmentCollectionChanged();
+		}
+
+		private void NonInteractiveLines_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
 			RaiseLineSegmentCollectionChanged();
 		}
 

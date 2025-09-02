@@ -154,7 +154,7 @@
     <value>Moves:</value>
   </data>
   <data name="WindowTitleFormat" xml:space="preserve">
-    <value>Untangle - Level {0}</value>
+    <value>Untangle - {0}</value>
   </data>
   <data name="mi_Edit_Header" xml:space="preserve">
     <value>_Edit</value>

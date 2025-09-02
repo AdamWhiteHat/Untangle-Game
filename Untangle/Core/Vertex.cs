@@ -311,7 +311,7 @@ namespace Untangle.Core
 
 
 		[XmlIgnore]
-		public Point? SolvedPosition { get; set; }
+		public Point? SolvedPosition { get; set; } = null;
 
 		[XmlIgnore]
 		public bool AtSolvedPosition { get { return (SolvedPosition.HasValue) ? (X == SolvedPosition.Value.X && Y == SolvedPosition.Value.Y) : false; } }

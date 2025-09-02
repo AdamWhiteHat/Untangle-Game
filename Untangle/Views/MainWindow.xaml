@@ -176,22 +176,33 @@
 				                Header="Get Chromatic Numbers"
 				                Click="ColorGraph_Click" />
                     <Separator />
-                    <MenuItem x:Name="mi_AutoSolve" Header="Auto-Solve" Click="mi_AutoSolve_Click" />
-                    <MenuItem x:Name="mi_SetVerticesSolvedPosition"
-                                Header="Set Vertices SOLVED Position"
-                                Click="mi_SetVerticesSolvePositions_Click" />
-                    <Separator />
+
                     <MenuItem x:Name="mi_SendVerticesToStartPositions"
 				                Header="Send To Start"
                                 Click="mi_SendVerticesToStartPositions_Click" />
                     <MenuItem x:Name="mi_ColorByStartPositions"
-				                Header="Mark Vertices In START Position"
+				                Header="Color Vertices by START Position"
 				                Click="mi_ColorByStartPositions_Click" />
+                    <Separator />
+                    <MenuItem x:Name="mi_AutoSolve" Header="Auto-Solve" Click="mi_AutoSolve_Click" />
+                    <MenuItem x:Name="mi_SetVerticesSolvedPosition"
+                                Header="Set Vertices SOLVED Position"
+                                Click="mi_SetVerticesSolvePositions_Click" />
+
+                    <MenuItem x:Name="mi_DrawSolveLines"
+                                Header="Trace path between Start and Solve Vertex Positions"
+                                Click="mi_DrawSolveLines_Click"
+                                Visibility="Collapsed" />
+
 
                     <Separator />
-                    <MenuItem x:Name="mi_RandomizeVertices"
+                    <MenuItem x:Name="mi_RandomizeVerticesLocation"
                                 Header="Randomize Vertices' Locations"
-                                Click="mi_RandomizeVertices_Click"
+                                Click="mi_RandomizeVerticesLocation_Click"
+				                Visibility="Collapsed" />
+                    <MenuItem x:Name="mi_RandomizeVerticesColors"
+                                Header="Randomize Vertices' Colors"
+                                Click="mi_RandomizeVerticesColors_Click"
 				                Visibility="Collapsed" />
                     <MenuItem x:Name="mi_ReScaleVertices"
                                 Header="Re-Scale All Vertices To Current Zoom Level"
@@ -446,19 +457,21 @@
                                 <Ellipse Style="{StaticResource vertexStyle}"
 										 Width="{Binding Size, Mode=OneWay}"
 										 Height="{Binding Size, Mode=OneWay}"                                                                                  
-                                         Stroke="Transparent"                                         
+                                         Stroke="Transparent"                                  
                                          MouseEnter="Vertex_MouseEnter"
 										 MouseLeave="Vertex_MouseLeave"
 										 MouseDown="Vertex_MouseDown"                                         
                                          >
                                     <Ellipse.RenderTransform>
                                         <TransformGroup>
-                                            <TranslateTransform X="{Binding X, Mode=TwoWay}" 
-                                                                Y="{Binding Y, Mode=TwoWay}" />
-                                            <TranslateTransform X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
-									                            Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
-                                            <TranslateTransform X="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}"
-									                            Y="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}" />
+                                            <TransformGroup.Children>
+                                                <TranslateTransform X="{Binding X, Mode=TwoWay}" 
+                                                                    Y="{Binding Y, Mode=TwoWay}" />
+                                                <TranslateTransform X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                                                    Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+                                                <TranslateTransform X="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}"
+                                                                    Y="{Binding Size, ConverterParameter=-0.5, Converter={u:MultiplicationConverter}}" />
+                                            </TransformGroup.Children>
                                         </TransformGroup>
                                     </Ellipse.RenderTransform>
                                 </Ellipse>
@@ -471,18 +484,35 @@
 										X2="{Binding Vertex2.X}"
 										Y2="{Binding Vertex2.Y}">
                                     <Line.RenderTransform>
-                                        <TranslateTransform
-                                                            X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+                                        <TranslateTransform X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
 												            Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
                                     </Line.RenderTransform>
                                 </Line>
                             </DataTemplate>
+                            <DataTemplate DataType="{x:Type vm:NonInteractiveLine}">
+                                <Line                                   
+                                    X1="{Binding X1}"
+                                    Y1="{Binding Y1}"
+                                    X2="{Binding X2}"
+                                    Y2="{Binding Y2}"
+                                    Stroke="{Binding LineColor}"
+                                    StrokeThickness="0.5"
+                                    Opacity="0.5"
+                                    >
+                                    <Line.RenderTransform>
+                                        <TranslateTransform X="{Binding ActualWidth, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
+											                Y="{Binding ActualHeight, ConverterParameter=0.5, Converter={u:MultiplicationConverter}, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+                                    </Line.RenderTransform>
+                                </Line>
+                            </DataTemplate>
+
                         </ItemsControl.Resources>
 
 
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <Canvas x:Name="gameCanvas" />
+                                <Canvas x:Name="gameCanvas">
+                                </Canvas>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
 
@@ -491,6 +521,7 @@
                                             CenterX="{Binding GameBoardCenter.X}"
                                             CenterY="{Binding GameBoardCenter.Y}"
                                             />
+
                         </ItemsControl.RenderTransform>
 
 

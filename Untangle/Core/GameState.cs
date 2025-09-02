@@ -64,9 +64,10 @@ namespace Untangle.Core
 		{
 			get
 			{
-				var objects = new List<object>(Graph.Vertices);
-				objects.AddRange(Graph.LineSegments);
-				return objects;
+				List<object> result = new List<object>(Graph.Vertices);
+				result.AddRange(Graph.LineSegments);
+				result.AddRange(Graph.NonInteractiveLines);
+				return result;
 			}
 		}
 
@@ -471,7 +472,7 @@ namespace Untangle.Core
 			}
 		}
 
-		public void Edit_RandomizeVertices(System.Windows.Size size)
+		public void Edit_RandomizeVerticesLocations(System.Windows.Size size)
 		{
 			GraphLayout.SelectRandomLayout(Graph, size);
 		}

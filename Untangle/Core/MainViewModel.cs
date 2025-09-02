@@ -166,9 +166,23 @@ namespace Untangle.Core
 		{
 			get
 			{
-				return string.Format(Resources.MainWindow.WindowTitleFormat, Game.LevelNumber);
+				if (_title == null)
+				{
+					return string.Format(Resources.MainWindow.WindowTitleFormat, $"Level {Game.LevelNumber}");
+				}
+				return _title;
+			}
+			set
+			{
+				string temp = string.Format(Resources.MainWindow.WindowTitleFormat, value);
+				if (_title != temp)
+				{
+					_title = temp;
+					RaisePropertyChanged();
+				}
 			}
 		}
+		private string _title = null;
 
 		public decimal ScaleZoom
 		{

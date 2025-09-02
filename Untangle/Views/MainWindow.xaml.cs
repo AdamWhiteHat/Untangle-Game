@@ -14,25 +14,24 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using Untangle.Generation;
 using Untangle.Core;
+using Untangle.Generation;
+using Untangle.Resources;
 using Untangle.Utils;
 using Vertex = Untangle.Core.Vertex;
-using System.Windows.Data;
-using WPFLocalizeExtension.Providers;
-using System.Reflection;
-using System.Collections;
-using Untangle.Resources;
 
 namespace Untangle
 {
@@ -125,8 +124,8 @@ namespace Untangle
 
 		private void SetTitle(string title)
 		{
-			string newTitle = $"Untangled - {title}";
-			this.Title = newTitle;
+			ViewModel.Title = title;
+			this.Title = ViewModel.Title;
 		}
 
 		private void Ic_GameField_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -205,6 +204,7 @@ namespace Untangle
 			}
 
 			ViewModel.NewGame(ic_GameField.RenderSize);
+			ResetLevelBuilderUi();
 			UpdateDebugOutput();
 		}
 
@@ -224,7 +224,7 @@ namespace Untangle
 
 			if (ViewModel.SaveGame(fileName, true))
 			{
-				SetTitle($"\"{fileName}\"");
+				SetTitle(System.IO.Path.GetFileName(fileName));
 			}
 
 			UpdateDebugOutput();
@@ -257,7 +257,7 @@ namespace Untangle
 
 			if (ViewModel.LoadGame(fileName))
 			{
-				SetTitle($"\"{fileName}\"");
+				SetTitle($"\"{System.IO.Path.GetFileName(fileName)}\"");
 			}
 
 			UpdateDebugOutput();
@@ -687,19 +687,26 @@ namespace Untangle
 				mi_LevelBuilder.Header = ExitLevelBuilder_MenuText;
 				borderGameField.BorderBrush = Brushes.Red;
 				levelEditorInstructions.Visibility = Visibility.Visible;
-				mi_RandomizeVertices.Visibility = Visibility.Visible;
+				mi_RandomizeVerticesLocation.Visibility = Visibility.Visible;
+				mi_RandomizeVerticesColors.Visibility = Visibility.Visible;
 				mi_ReScaleVertices.Visibility = Visibility.Visible;
 				mi_RecenterAllVertices.Visibility = Visibility.Visible;
 			}
 			else
 			{
-				mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
-				borderGameField.SetResourceReference(Border.BorderBrushProperty, "windowBorderColor");
-				levelEditorInstructions.Visibility = Visibility.Hidden;
-				mi_RandomizeVertices.Visibility = Visibility.Collapsed;
-				mi_ReScaleVertices.Visibility = Visibility.Collapsed;
-				mi_RecenterAllVertices.Visibility = Visibility.Collapsed;
+				ResetLevelBuilderUi();
 			}
+		}
+
+		private void ResetLevelBuilderUi()
+		{
+			mi_LevelBuilder.Header = EnterLevelBuilder_MenuText;
+			borderGameField.SetResourceReference(Border.BorderBrushProperty, "windowBorderColor");
+			levelEditorInstructions.Visibility = Visibility.Hidden;
+			mi_RandomizeVerticesLocation.Visibility = Visibility.Collapsed;
+			mi_RandomizeVerticesColors.Visibility = Visibility.Collapsed;
+			mi_ReScaleVertices.Visibility = Visibility.Collapsed;
+			mi_RecenterAllVertices.Visibility = Visibility.Collapsed;
 		}
 
 		#region Color Vertices
@@ -727,6 +734,11 @@ namespace Untangle
 
 		private void mi_SendVerticesToStartPositions_Click(object sender, RoutedEventArgs e)
 		{
+			SendVerticesToStartPositions();
+		}
+
+		private void SendVerticesToStartPositions()
+		{
 			foreach (Vertex vertex in ViewModel.Game.Graph.Vertices)
 			{
 				SendVertexToStartingPosition(vertex);
@@ -740,12 +752,69 @@ namespace Untangle
 			{
 				vertex.SolvedPosition = vertex.GetPosition();
 			}
+
+			mi_DrawSolveLines.Visibility = Visibility.Visible;
 		}
 
-		private void mi_RandomizeVertices_Click(object sender, RoutedEventArgs e)
+		private void mi_DrawSolveLines_Click(object sender, RoutedEventArgs e)
 		{
-			ViewModel.Game.Edit_RandomizeVertices(ic_GameField.RenderSize);
+			if (ViewModel.Game.Graph.Vertices.Any(v => v.SolvedPosition == null))
+			{
+				return;
+			}
+
+			if (ViewModel.Game.Graph.Vertices.Any(v => !v.AtStartPosition))
+			{
+				SendVerticesToStartPositions();
+			}
+
+			if (ViewModel.Game.Graph.NonInteractiveLines.Any())
+			{
+				ViewModel.Game.Graph.NonInteractiveLines.Clear();
+			}
+
+			RandomizeVerticesColors();
+
+			foreach (Vertex vertex in ViewModel.Game.Graph.Vertices)
+			{
+				NonInteractiveLine newLine = new NonInteractiveLine(vertex);
+				//newLine.X1 = vertex.StartingPosition.Value.X;
+				//newLine.Y1 = vertex.StartingPosition.Value.Y;
+				//newLine.X2 = vertex.SolvedPosition.Value.X;
+				//newLine.Y2 = vertex.SolvedPosition.Value.Y;
+				//newLine.Stroke = Brushes.Orange;
+				//newLine.StrokeEndLineCap = PenLineCap.Triangle;
+				//newLine.StrokeStartLineCap = PenLineCap.Triangle;
+				//newLine.StrokeDashOffset = 1;
+				//newLine.StrokeThickness = 0.5;
+				//newLine.Opacity = 0.75;
+				//newLine.DataContext = ViewModel;
+				ViewModel.Game.Graph.NonInteractiveLines.Add(newLine);
+			}
+
+			int i = 0;
+		}
+
+		private void mi_RandomizeVerticesLocation_Click(object sender, RoutedEventArgs e)
+		{
+			ViewModel.Game.Edit_RandomizeVerticesLocations(ic_GameField.RenderSize);
 			UpdateDebugOutput();
+		}
+
+		private void mi_RandomizeVerticesColors_Click(object sender, RoutedEventArgs e)
+		{
+			RandomizeVerticesColors();
+		}
+
+		private void RandomizeVerticesColors()
+		{
+			int max = ColorPalette.Default.Count - 1;
+			int counter = 0;
+			foreach (Vertex vertex in ViewModel.Game.Graph.Vertices)
+			{
+				vertex.SetColor(ColorPalette.Default[(counter % max)]);
+				counter++;
+			}
 		}
 
 		private void mi_ReScaleVertices_Click(object sender, RoutedEventArgs e)
