@@ -121,17 +121,23 @@
     <value>_Close</value>
   </data>
   <data name="tb_3rdPartyLicenses_Text" xml:space="preserve">
-    <value>External libraries used were created by Uwe Mayer, Konrad Mattheis, and Bernhard Millauer, and licensed under Microsoft Public License, available at [a href='http://opensource.org/licenses/MS-PL']http://opensource.org/licenses/MS-PL[/a].</value>
+    <value>External libraries used were created by Uwe Mayer, Konrad Mattheis, and Bernhard Millauer, and licensed under Microsoft Public License, available at [a href='http://opensource.org/licenses/MS-PL']http://opensource.org/licenses/MS-PL[/a]</value>
   </data>
-  <data name="tb_Author_Text" xml:space="preserve">
-    <value>Created by Aleksandar Dalemski ([a href='mailto:a_dalemski@yahoo.com']a_dalemski@yahoo.com[/a]) with modifications/changes by Adam White ([a href='https://github.com/AdamWhiteHat']https://github.com/AdamWhiteHat[/a]).</value>
+  <data name="tb_Author_Text_1" xml:space="preserve">
+    <value>Created by Aleksandar Dalemski ([a href='mailto:a_dalemski@yahoo.com']a_dalemski@yahoo.com[/a]) </value>
+  </data>
+  <data name="tb_Author_Text_2" xml:space="preserve">
+    <value>with modifications/changes by Adam White ([a href='https://github.com/AdamWhiteHat']https://github.com/AdamWhiteHat[/a]).</value>
   </data>
   <data name="tb_License_Text" xml:space="preserve">
-    <value>Licensed under Mozilla Public License, version 2.0, available at [a href='http://www.mozilla.org/MPL/2.0/']http://www.mozilla.org/MPL/2.0/[/a].</value>
+    <value>Licensed under Mozilla Public License, version 2.0, available at [a href='http://www.mozilla.org/MPL/2.0']http://www.mozilla.org/MPL/2.0[/a]</value>
+  </data>
+  <data name="tb_SaveFileVersion_Text" xml:space="preserve">
+    <value>Save File Version: </value>
   </data>
   <data name="tb_SourceCode_Text" xml:space="preserve">
-    <value>Original source code is available at [a href='https://sourceforge.net/projects/untanglegame/']https://sourceforge.net/projects/untanglegame/[/a].
-New/Modified source code (this application) available at [a href='https://github.com/AdamWhiteHat']https://github.com/AdamWhiteHat[/a].</value>
+    <value>Original source code is available at [a href='https://sourceforge.net/projects/untanglegame']https://sourceforge.net/projects/untanglegame[/a]
+New/Modified source code (this application) available at [a href='https://github.com/AdamWhiteHat']https://github.com/AdamWhiteHat[/a]</value>
   </data>
   <data name="tb_Title_Text" xml:space="preserve">
     <value>Untangle</value>
@@ -140,7 +146,7 @@ New/Modified source code (this application) available at [a href='https://github
     <value />
   </data>
   <data name="tb_VersionCaption_Text" xml:space="preserve">
-    <value>Version</value>
+    <value>Version:</value>
   </data>
   <data name="Window_Title" xml:space="preserve">
     <value>About the Game</value>

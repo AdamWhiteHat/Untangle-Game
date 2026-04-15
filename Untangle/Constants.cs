@@ -8,6 +8,10 @@
  * Author:	Aleksandar Dalemski, a_dalemski@yahoo.com
  */
 
+using System.Diagnostics;
+using System.Reflection;
+using System.Windows.Forms;
+
 namespace Untangle
 {
 	/// <summary>
@@ -15,10 +19,19 @@ namespace Untangle
 	/// </summary>
 	public static class Constants
 	{
+		static Constants()
+		{
+			Assembly assembly = Assembly.GetExecutingAssembly();
+			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+			ApplicationVersion = $"{fvi.ProductMajorPart}.{fvi.ProductMinorPart}.{fvi.ProductBuildPart}";
+		}
+
 		/// <summary>
 		/// The current version of Untangle.
 		/// </summary>
-		public const string Version = "1.1.0";
+		public static string ApplicationVersion;
+
+		public const string SaveFileVersion = "4.0";
 
 		/// <summary>
 		/// The path of the registry key in HKEY_CURRENT_USER which contains Untangle settings.

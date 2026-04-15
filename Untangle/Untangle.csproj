@@ -15,14 +15,19 @@
 		<Product>Untangle</Product>
 		<Authors>Aleksandar Dalemski and Adam White</Authors>
 		<Copyright>Created by Aleksandar Dalemski</Copyright>
-
-		<Version>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</Version>
-		<AssemblyVersion>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</AssemblyVersion>
-		<FileVersion>$([System.DateTime]::Now.ToString("yyyy."$([System.DateTime]::Now.DayOfYear)".HHmm"))</FileVersion>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 		<PackageOutputPath>$(OutputPath)</PackageOutputPath>
-		<PackageReleaseNotes></PackageReleaseNotes>
-		<PackageTags></PackageTags>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<MajorVersion Condition=" '$(MajorVersion)' == '' ">4</MajorVersion>
+		<MinorVersion Condition=" '$(MinorVersion)' == '' ">0</MinorVersion>
+		<PatchVersion Condition=" '$(PatchVersion)' == '' ">0</PatchVersion>
+
+		<BuildTimestamp>$([System.DateTime]::Now.DayOfYear.ToString().PadLeft(3,'0'))</BuildTimestamp>
+
+		<Version>$(MajorVersion).$(MinorVersion).$(PatchVersion)</Version>
+		<AssemblyVersion>$(Version).$(BuildTimestamp)</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

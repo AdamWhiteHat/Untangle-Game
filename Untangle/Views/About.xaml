@@ -1,0 +1,262 @@
+﻿<Window x:Class="Untangle.Views.About"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Untangle.Views"
+        xmlns:v="clr-namespace:Untangle"
+        xmlns:u="clr-namespace:Untangle.Utils"
+        mc:Ignorable="d"
+        
+        lex:ResxLocalizationProvider.DefaultAssembly="Untangle"
+        lex:ResxLocalizationProvider.DefaultDictionary="Resources.AboutBox"
+        
+        Title="{lex:Loc tb_Title_Text}"
+        WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner"
+        HorizontalAlignment="Center" VerticalAlignment="Center"
+        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"        
+        Width="488" 
+        Height="520">
+
+    <Window.Resources>
+
+        <Style x:Key="TableStyle" TargetType="Table">
+            <Setter Property="CellSpacing" Value="0pt" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0pt" />
+            <Setter Property="FontFamily" Value="Cascadia Mono" />
+            <Setter Property="TextAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="TableRowStyle" TargetType="TableRow">
+        </Style>
+
+
+        <Style x:Key="TableRowGroupStyle" TargetType="TableRowGroup">
+            <Setter Property="FrameworkElement.Margin" Value="20,10,0,0" />
+            <Setter Property="FrameworkElement.VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="TableCell">
+            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderThickness" Value="0pt" />
+        </Style>
+
+        <Style x:Key="RowBreak" TargetType="TableRow">
+            <Setter Property="Block.Margin" Value="20" />
+            <Setter Property="Block.Padding" Value="20" />
+        </Style>
+
+    </Window.Resources>
+
+    <FlowDocument x:Name="flowDocument" ColumnRuleBrush="Black" ColumnRuleWidth="1" ColumnGap="3">
+        <FlowDocument.Resources>
+            
+        </FlowDocument.Resources>
+        <Table Style="{DynamicResource TableStyle}">
+
+            <Table.Columns>
+                <TableColumn Width="Auto" />
+            </Table.Columns>
+
+            <TableRowGroup>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                            <TextBlock x:Name="tb_Title"      
+                                        Margin="0,0,0,10"
+                                        FontSize="18"
+                                        FontWeight="Bold"
+                                        Text="{lex:Loc tb_Title_Text}" />
+
+                        </Paragraph>
+                        <Paragraph>
+                            <StackPanel  Margin="15,0,0,0">
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <TextBlock x:Name="tb_VersionCaption"
+                                                FontStyle="Italic"
+                                                Text="{lex:Loc tb_VersionCaption_Text}" />
+
+                                    <TextBlock x:Name="tb_Version"    
+                                                Margin="5,0,0,0"
+                                                FontStyle="Italic"
+                                                Text="{x:Static v:Constants.ApplicationVersion}" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+
+                                    <TextBlock x:Name="tb_SaveFileVersion"
+                                                Margin="0,4,0,0"
+                                                TextWrapping="Wrap"
+                                                Text="{lex:Loc tb_SaveFileVersion_Text}" />
+
+                                    <TextBlock x:Name="tb_SaveFileVersion_Version"    
+                                               Margin="0,4,0,0"
+                                               FontStyle="Italic"
+                                               Text="{x:Static v:Constants.SaveFileVersion}" />
+                                </StackPanel>
+
+                            </StackPanel>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+            </TableRowGroup>
+
+            <TableRowGroup>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+            </TableRowGroup>
+            <TableRowGroup  Style="{DynamicResource TableRowGroupStyle}" >
+                <TableRow Style="{DynamicResource RowBreak}" />
+            </TableRowGroup>
+
+            <TableRowGroup >
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+                            <StackPanel>
+                                <TextBlock x:Name="tb_Author_1"                           
+                                            TextWrapping="Wrap"
+                                            u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_Author_Text_1}" />
+
+                                <TextBlock x:Name="tb_Author_2"                             
+                                            TextWrapping="Wrap"
+                                            u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_Author_Text_2}" />
+                            </StackPanel>
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow Style="{DynamicResource RowBreak}" />
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+                            <TextBlock x:Name="tb_Translator"
+                                        Margin="0,10,0,0"
+                                        TextWrapping="Wrap"
+                                        u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_Translator_Text}" />
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+                            <TextBlock x:Name="tb_License"
+                                        Margin="0,10,0,0"
+                                        TextWrapping="Wrap"
+                                        u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_License_Text}" />
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+                            <TextBlock x:Name="tb_SourceCode"
+                                        Margin="0,10,0,0"
+                                        TextWrapping="Wrap"
+                                        u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_SourceCode_Text}" />
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+                            <TextBlock x:Name="tb_3rdPartyLicenses"  
+                                        Margin="0,10,0,0"
+                                        TextWrapping="Wrap"
+                                        u:HyperlinkTextBehavior.FormattedText="{lex:Loc tb_3rdPartyLicenses_Text}" />
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+
+
+                <TableRow>
+                    <TableCell>
+                        <Paragraph>
+
+                        </Paragraph>
+                    </TableCell>
+                </TableRow>
+
+            </TableRowGroup>
+        </Table>
+
+    </FlowDocument>
+
+</Window>

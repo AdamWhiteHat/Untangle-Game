@@ -31,6 +31,7 @@ using Untangle.Core;
 using Untangle.Generation;
 using Untangle.Resources;
 using Untangle.Utils;
+using Untangle.Views;
 using Vertex = Untangle.Core.Vertex;
 
 namespace Untangle
@@ -131,6 +132,11 @@ namespace Untangle
 		private void Ic_GameField_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			ViewModel.SetBoardSize(ic_GameField.RenderSize);
+		}
+
+		private System.Drawing.Color GetDarkerColor(System.Drawing.Color baseColor)
+		{
+			return System.Windows.Forms.ControlPaint.Dark(baseColor);
 		}
 
 		public Vertex GetVertexFromId(int vertexId)
@@ -308,7 +314,7 @@ namespace Untangle
 		/// <param name="e">The <see cref="ExecutedRoutedEventArgs"/>  containing the event arguments.</param>
 		private void AboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			var aboutBox = new AboutBox
+			About aboutBox = new About
 			{
 				Owner = this,
 			};
