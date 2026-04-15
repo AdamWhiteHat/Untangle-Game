@@ -50,31 +50,14 @@
 	>
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="32" ResizeBorderThickness="{x:Static SystemParameters.WindowResizeBorderThickness}" />
+        <WindowChrome CaptionHeight="32" 
+                      ResizeBorderThickness="{Binding ConverterParameter=2.5, Converter={u:ThicknessMultiplicationConverter}, Mode=OneWay, Source={x:Static SystemParameters.WindowResizeBorderThickness}}"
+                      />
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <ResourceDictionary>
-
-            <SolidColorBrush x:Key="MouseOverOverlayBackgroundBrush">
-                LightGray
-            </SolidColorBrush>
-
-            <SolidColorBrush x:Key="PressedOverlayBackgroundBrush">
-                Green
-            </SolidColorBrush>
-
-            <SolidColorBrush x:Key="MouseOverWindowCloseButtonForegroundBrush">
-                Yellow
-            </SolidColorBrush>
-
-            <SolidColorBrush x:Key="MouseOverWindowCloseButtonBackgroundBrush">
-                Blue
-            </SolidColorBrush>
-
-            <SolidColorBrush x:Key="PressedWindowCloseButtonBackgroundBrush">
-                Hotpink
-            </SolidColorBrush>
+            <u:ThicknessMultiplicationConverter x:Key="ThicknessMultiplicationConverter"/>
 
 
             <DrawingBrush x:Key="SquareLattice" Stretch="None" TileMode="Tile"
